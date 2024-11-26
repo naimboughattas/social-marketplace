@@ -36,5 +36,10 @@
     "supertest": "^6.3.4",
     "tsup": "^8.0.2",
     "typescript": "5.5.4"
-  }
+  },
+  "main": ".eslintrc.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
 }
