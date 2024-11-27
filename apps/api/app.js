@@ -1,18 +1,21 @@
-const http = require("node:http");
+const http = require("http");
 const express = require("express");
 const admin = require("firebase-admin");
-const serviceAccount = require("./firebase-credentials.json");
+const {
+  getFirestore,
+  addDoc,
+  collection,
+} = require("firebase-admin/firestore");
 
-admin.initializeApp({
+const serviceAccount = require("./firebase-credentials.json");
+const firebase = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL:
     "https://social-marketplace-9eb85-default-rtdb.europe-west1.firebasedatabase.app/",
 });
 
 // Obtention de la référence à la base de données
-const db = admin.firestore();
-const { addDoc, collection } = db;
-
+const db = getFirestore(firebase);
 const app = express();
 const PORT = 8000;
 
@@ -54,7 +57,7 @@ app.get("/cb/instagram", async (req, res) => {
           client_secret: clientSecret,
           grant_type: "authorization_code",
           redirect_uri: redirectUri,
-          code,
+          code: code,
         }),
         headers: {
           "Content-Type": "application/x-www-form-urlencoded", // Form URL Encoded
