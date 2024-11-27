@@ -31,6 +31,12 @@ app.get("/webhook/instagram", (req, res) => {
   res.status(200).send("OK");
 });
 
+app.get("/cb/instagram", (req, res) => {
+  // Instagram callback from instagram oauth login flow
+  console.log("Instagram callback received:", req.query);
+  res.status(200).send("OK");
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
 });
