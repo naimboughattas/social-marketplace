@@ -53,8 +53,7 @@ app.get("/cb/instagram", async (req, res) => {
 
   const clientId = "1617513219147291";
   const clientSecret = "3c5ff784e66d4de157b09b5a43cb64c2";
-  const redirectUri =
-    "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"; // Redirection après l'authentification Instagram
+  const redirectUri = "https://the-reach-market-api.vercel.app/cb/instagram"; // Redirection après l'authentification Instagram
 
   try {
     // Requête pour échanger le code d'autorisation contre un access token
@@ -67,7 +66,7 @@ app.get("/cb/instagram", async (req, res) => {
           client_secret: clientSecret,
           grant_type: "authorization_code",
           redirect_uri: redirectUri,
-          code: code,
+          code,
         }),
         headers: {
           "Content-Type": "application/x-www-form-urlencoded", // Form URL Encoded
@@ -78,9 +77,7 @@ app.get("/cb/instagram", async (req, res) => {
     // Vérification de la réponse
     if (!response.ok) {
       console.error("Failed to exchange code for token", response.statusText);
-      return res
-        .status(400)
-        .send(response);
+      return res.status(400).send(response);
     }
 
     // Récupération des données (access token) renvoyées par Instagram
