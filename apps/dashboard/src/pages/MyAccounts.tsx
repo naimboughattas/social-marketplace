@@ -28,7 +28,7 @@ const getAccessToken = async (code: string) => {
           client_id: "1617513219147291",
           client_secret: "3c5ff784e66d4de157b09b5a43cb64c2",
           grant_type: "authorization_code",
-          redirect_uri: "#",
+          redirect_uri: "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts",
           code,
         }),
         headers: {
