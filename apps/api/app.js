@@ -1,17 +1,19 @@
 const http = require("http");
 const express = require("express");
 const admin = require("firebase-admin");
-const {
-  getFirestore,
-  addDoc,
-  collection,
-} = require("firebase-admin/firestore");
-
+const { getFirestore, addDoc, collection } = require("firebase/firestore");
 const serviceAccount = require("./firebase-credentials.json");
+
 const firebase = admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   databaseURL:
     "https://social-marketplace-9eb85-default-rtdb.europe-west1.firebasedatabase.app/",
+  appId: process.env.VITE_FIREBASE_APP_ID,
+  credential: admin.credential.cert(serviceAccount),
 });
 
 // Obtention de la référence à la base de données
@@ -77,13 +79,11 @@ app.get("/cb/instagram", async (req, res) => {
 
     // Sauvegarde de l'access token dans Firebase
     const userId = data.user_id; // Assure-toi de récupérer l'ID utilisateur unique d'Instagram
-    const socialAccountsCollection = collection(db, "socialAccounts"); // Référence à la collection Firestore
-    await addDoc(socialAccountsCollection, {
+    const accountRef = await addDoc(collection(db, "test"), {
       access_token: data.access_token,
       user_id: userId,
       timestamp: admin.firestore.FieldValue.serverTimestamp(), // Ajouter un timestamp si nécessaire
     });
-
     console.log("Access token saved to Firebase");
 
     // Répondre à l'utilisateur
