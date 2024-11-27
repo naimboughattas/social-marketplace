@@ -1,8 +1,8 @@
-const http = require("http");
+const http = require("node:http");
 const express = require("express");
 const admin = require("firebase-admin");
-
 const serviceAccount = require("./firebase-credentials.json");
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL:
@@ -10,7 +10,9 @@ admin.initializeApp({
 });
 
 // Obtention de la référence à la base de données
-const db = admin.database();
+const db = admin.firestore();
+const { addDoc, collection } = db;
+
 const app = express();
 const PORT = 8000;
 
@@ -52,7 +54,7 @@ app.get("/cb/instagram", async (req, res) => {
           client_secret: clientSecret,
           grant_type: "authorization_code",
           redirect_uri: redirectUri,
-          code: code,
+          code,
         }),
         headers: {
           "Content-Type": "application/x-www-form-urlencoded", // Form URL Encoded
@@ -72,10 +74,11 @@ app.get("/cb/instagram", async (req, res) => {
 
     // Sauvegarde de l'access token dans Firebase
     const userId = data.user_id; // Assure-toi de récupérer l'ID utilisateur unique d'Instagram
-    const userTokenRef = db.ref("instagram_tokens/" + userId);
-    await userTokenRef.set({
+    const socialAccountsCollection = collection(db, "socialAccounts"); // Référence à la collection Firestore
+    await addDoc(socialAccountsCollection, {
       access_token: data.access_token,
       user_id: userId,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(), // Ajouter un timestamp si nécessaire
     });
 
     console.log("Access token saved to Firebase");
