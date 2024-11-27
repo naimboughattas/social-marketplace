@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { X, Info } from 'lucide-react';
-import Button from './Button';
-import Input from './Input';
-import CityInput from './CityInput';
-import PlatformIcon from './PlatformIcon';
-import ServiceIcon from './ServiceIcon';
-import { useNotifications } from '../lib/notifications';
-import { 
+import { useState } from "react";
+import { X, Info } from "lucide-react";
+import Button from "./Button";
+import Input from "./Input";
+import CityInput from "./CityInput";
+import PlatformIcon from "./PlatformIcon";
+import ServiceIcon from "./ServiceIcon";
+import { useNotifications } from "../lib/notifications";
+import {
   Platform,
   PLATFORMS,
   PLATFORM_LABELS,
@@ -17,9 +17,9 @@ import {
   LANGUAGES,
   COUNTRIES,
   SocialAccount,
-  Service
-} from '../lib/types';
-import * as Tooltip from '@radix-ui/react-tooltip';
+  Service,
+} from "../lib/types";
+import * as Tooltip from "@radix-ui/react-tooltip";
 
 interface AccountSettingsModalProps {
   account?: SocialAccount;
@@ -27,34 +27,36 @@ interface AccountSettingsModalProps {
   onSave: (account: SocialAccount | Partial<SocialAccount>) => void;
 }
 
-type Step = 'platform' | 'info' | 'location' | 'services' | 'verification';
+type Step = "platform" | "info" | "location" | "services" | "verification";
 
-export default function AccountSettingsModal({ 
+export default function AccountSettingsModal({
   account,
-  onClose, 
-  onSave 
+  onClose,
+  onSave,
 }: AccountSettingsModalProps) {
   const { addNotification } = useNotifications();
-  const [step, setStep] = useState<Step>('platform');
-  const [formData, setFormData] = useState<Partial<SocialAccount>>(account || {
-    platform: 'instagram',
-    username: '',
-    displayName: '',
-    profileImage: '',
-    followers: 0,
-    category: '',
-    country: '',
-    city: '',
-    language: '',
-    isVerified: false,
-    isActive: true,
-    hideIdentity: false,
-    prices: {},
-    availableServices: [],
-    avgDeliveryTime: 30,
-    completedOrders: 0,
-    rating: 5.0,
-  });
+  const [step, setStep] = useState<Step>("platform");
+  const [formData, setFormData] = useState<Partial<SocialAccount>>(
+    account || {
+      platform: "instagram",
+      username: "",
+      displayName: "",
+      profileImage: "",
+      followers: 0,
+      category: "",
+      country: "",
+      city: "",
+      language: "",
+      isVerified: false,
+      isActive: true,
+      hideIdentity: false,
+      prices: {},
+      availableServices: [],
+      avgDeliveryTime: 30,
+      completedOrders: 0,
+      rating: 5.0,
+    }
+  );
 
   const [verificationCode] = useState(() => {
     const timestamp = Date.now().toString(36);
@@ -62,7 +64,13 @@ export default function AccountSettingsModal({
     return `VERIFY-${randomStr}-${timestamp}`.toUpperCase();
   });
 
-  const steps: Step[] = ['platform', 'info', 'location', 'services', 'verification'];
+  const steps: Step[] = [
+    "platform",
+    "info",
+    "location",
+    "services",
+    "verification",
+  ];
 
   const handleNext = () => {
     const currentIndex = steps.indexOf(step);
@@ -81,16 +89,16 @@ export default function AccountSettingsModal({
   const handleSubmit = () => {
     if (!formData.username) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez entrer un nom d\'utilisateur'
+        type: "error",
+        message: "Veuillez entrer un nom d'utilisateur",
       });
       return;
     }
 
     if (!formData.availableServices?.length) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez sélectionner au moins un service'
+        type: "error",
+        message: "Veuillez sélectionner au moins un service",
       });
       return;
     }
@@ -98,7 +106,7 @@ export default function AccountSettingsModal({
     const newAccount = {
       ...formData,
       id: account?.id || crypto.randomUUID(),
-      verificationCode
+      verificationCode,
     };
 
     onSave(newAccount);
@@ -107,7 +115,7 @@ export default function AccountSettingsModal({
 
   const renderStepContent = () => {
     switch (step) {
-      case 'platform':
+      case "platform":
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Choisissez votre plateforme</h3>
@@ -117,27 +125,31 @@ export default function AccountSettingsModal({
                   key={platform}
                   className={`flex items-center space-x-3 p-4 rounded-lg border-2 ${
                     formData.platform === platform
-                      ? 'border-purple-600 bg-purple-50'
-                      : 'border-gray-200 hover:border-purple-200'
+                      ? "border-purple-600 bg-purple-50"
+                      : "border-gray-200 hover:border-purple-200"
                   }`}
                   onClick={() => setFormData({ ...formData, platform })}
                 >
                   <PlatformIcon platform={platform} className="h-6 w-6" />
-                  <span className="font-medium">{PLATFORM_LABELS[platform]}</span>
+                  <span className="font-medium">
+                    {PLATFORM_LABELS[platform]}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
         );
 
-      case 'info':
+      case "info":
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Informations du compte</h3>
             <Input
               label="Nom d'utilisateur"
-              value={formData.username || ''}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              value={formData.username || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
               required
             />
             <div>
@@ -146,13 +158,17 @@ export default function AccountSettingsModal({
               </label>
               <select
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, category: e.target.value })
+                }
                 className="w-full rounded-md border border-gray-200 p-2"
                 required
               >
                 <option value="">Sélectionner...</option>
                 {CATEGORIES.map((category) => (
-                  <option key={category} value={category}>{category}</option>
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
               </select>
             </div>
@@ -162,20 +178,24 @@ export default function AccountSettingsModal({
               </label>
               <select
                 value={formData.language}
-                onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, language: e.target.value })
+                }
                 className="w-full rounded-md border border-gray-200 p-2"
                 required
               >
                 <option value="">Sélectionner...</option>
                 {LANGUAGES.map((language) => (
-                  <option key={language} value={language}>{language}</option>
+                  <option key={language} value={language}>
+                    {language}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
         );
 
-      case 'location':
+      case "location":
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Localisation</h3>
@@ -185,111 +205,128 @@ export default function AccountSettingsModal({
               </label>
               <select
                 value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, country: e.target.value })
+                }
                 className="w-full rounded-md border border-gray-200 p-2"
                 required
               >
                 <option value="">Sélectionner...</option>
                 {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>{country}</option>
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
                 ))}
               </select>
             </div>
             <CityInput
-              value={formData.city || ''}
+              value={formData.city || ""}
               onSelect={(city) => setFormData({ ...formData, city })}
             />
           </div>
         );
 
-      case 'services':
+      case "services":
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Services proposés</h3>
             <p className="text-sm text-gray-500">
-              Sélectionnez les services que vous souhaitez proposer et définissez vos tarifs
+              Sélectionnez les services que vous souhaitez proposer et
+              définissez vos tarifs
             </p>
             <div className="space-y-3">
-              {PLATFORM_SERVICES[formData.platform as Platform].map((service) => (
-                <div key={service} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      checked={formData.availableServices?.includes(service)}
-                      onChange={(e) => {
-                        const services = formData.availableServices || [];
-                        setFormData({
-                          ...formData,
-                          availableServices: e.target.checked
-                            ? [...services, service]
-                            : services.filter(s => s !== service),
-                          prices: {
-                            ...formData.prices,
-                            [service]: e.target.checked ? (formData.prices?.[service] || 2) : undefined
-                          }
-                        });
-                      }}
-                      className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="flex items-center space-x-2">
-                      <ServiceIcon service={service} />
-                      <span className="font-medium">{SERVICE_LABELS[service]}</span>
-                      <Tooltip.Provider>
-                        <Tooltip.Root>
-                          <Tooltip.Trigger asChild>
-                            <button className="text-gray-400 hover:text-gray-600">
-                              <Info className="h-4 w-4" />
-                            </button>
-                          </Tooltip.Trigger>
-                          <Tooltip.Portal>
-                            <Tooltip.Content
-                              className="z-50 bg-gray-900 text-white px-3 py-2 rounded text-sm max-w-xs"
-                              sideOffset={5}
-                            >
-                              {SERVICE_DESCRIPTIONS[service]}
-                              <Tooltip.Arrow className="fill-gray-900" />
-                            </Tooltip.Content>
-                          </Tooltip.Portal>
-                        </Tooltip.Root>
-                      </Tooltip.Provider>
-                    </div>
-                  </div>
-                  {formData.availableServices?.includes(service) && (
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="number"
-                        value={formData.prices?.[service] || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          prices: {
-                            ...formData.prices,
-                            [service]: parseFloat(e.target.value)
-                          }
-                        })}
-                        className="w-24"
-                        min="0"
-                        step="0.1"
-                        required
+              {PLATFORM_SERVICES[formData.platform as Platform].map(
+                (service) => (
+                  <div
+                    key={service}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.availableServices?.includes(service)}
+                        onChange={(e) => {
+                          const services = formData.availableServices || [];
+                          setFormData({
+                            ...formData,
+                            availableServices: e.target.checked
+                              ? [...services, service]
+                              : services.filter((s) => s !== service),
+                            prices: {
+                              ...formData.prices,
+                              [service]: e.target.checked
+                                ? formData.prices?.[service] || 2
+                                : undefined,
+                            },
+                          });
+                        }}
+                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                       />
-                      <span className="text-gray-500">€</span>
+                      <div className="flex items-center space-x-2">
+                        <ServiceIcon service={service} />
+                        <span className="font-medium">
+                          {SERVICE_LABELS[service]}
+                        </span>
+                        <Tooltip.Provider>
+                          <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                              <button className="text-gray-400 hover:text-gray-600">
+                                <Info className="h-4 w-4" />
+                              </button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Portal>
+                              <Tooltip.Content
+                                className="z-50 bg-gray-900 text-white px-3 py-2 rounded text-sm max-w-xs"
+                                sideOffset={5}
+                              >
+                                {SERVICE_DESCRIPTIONS[service]}
+                                <Tooltip.Arrow className="fill-gray-900" />
+                              </Tooltip.Content>
+                            </Tooltip.Portal>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {formData.availableServices?.includes(service) && (
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="number"
+                          value={formData.prices?.[service] || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              prices: {
+                                ...formData.prices,
+                                [service]: parseFloat(e.target.value),
+                              },
+                            })
+                          }
+                          className="w-24"
+                          min="0"
+                          step="0.1"
+                          required
+                        />
+                        <span className="text-gray-500">€</span>
+                      </div>
+                    )}
+                  </div>
+                )
+              )}
             </div>
           </div>
         );
 
-      case 'verification':
+      case "verification":
         return (
           <div className="space-y-4">
-            <div className="bg-purple-50 p-4 rounded-lg">
+            {/* <div className="bg-purple-50 p-4 rounded-lg">
               <h3 className="text-lg font-medium text-purple-900 mb-2">
                 Dernière étape : Vérification de votre compte
               </h3>
               <p className="text-sm text-purple-700">
-                Pour finaliser l'ajout de votre compte et commencer à recevoir des commandes, 
-                nous devons vérifier que vous êtes bien propriétaire du compte <strong>{formData.username}</strong>.
+                Pour finaliser l'ajout de votre compte et commencer à recevoir
+                des commandes, nous devons vérifier que vous êtes bien
+                propriétaire du compte <strong>{formData.username}</strong>.
               </p>
             </div>
 
@@ -300,9 +337,12 @@ export default function AccountSettingsModal({
                     1
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">Voici votre code de vérification</p>
+                    <p className="font-medium text-gray-900">
+                      Voici votre code de vérification
+                    </p>
                     <p className="text-sm text-gray-500">
-                      Copiez ce code unique qui prouve que vous êtes propriétaire du compte
+                      Copiez ce code unique qui prouve que vous êtes
+                      propriétaire du compte
                     </p>
                   </div>
                 </div>
@@ -312,8 +352,8 @@ export default function AccountSettingsModal({
                   onClick={() => {
                     navigator.clipboard.writeText(verificationCode);
                     addNotification({
-                      type: 'success',
-                      message: 'Code copié dans le presse-papier'
+                      type: "success",
+                      message: "Code copié dans le presse-papier",
                     });
                   }}
                 >
@@ -332,13 +372,23 @@ export default function AccountSettingsModal({
                   2
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Envoyez-nous le code</p>
+                  <p className="font-medium text-gray-900">
+                    Envoyez-nous le code
+                  </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    Envoyez-nous un message direct sur {PLATFORM_LABELS[formData.platform as Platform]} avec ce code.
+                    Envoyez-nous un message direct sur{" "}
+                    {PLATFORM_LABELS[formData.platform as Platform]} avec ce
+                    code.
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
+
+            <a href="https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish">
+              <Button size="sm" onClick={() => undefined}>
+                Synchroniser mon compte Instagram
+              </Button>
+            </a>
           </div>
         );
     }
@@ -355,8 +405,8 @@ export default function AccountSettingsModal({
                   key={`step-${s}`}
                   className={`h-2 w-2 rounded-full ${
                     steps.indexOf(step) >= index
-                      ? 'bg-purple-600'
-                      : 'bg-gray-200'
+                      ? "bg-purple-600"
+                      : "bg-gray-200"
                   }`}
                 />
               ))}
@@ -382,13 +432,9 @@ export default function AccountSettingsModal({
               Retour
             </Button>
             {step === steps[steps.length - 1] ? (
-              <Button onClick={handleSubmit}>
-                Terminer
-              </Button>
+              <Button onClick={handleSubmit}>Terminer</Button>
             ) : (
-              <Button onClick={handleNext}>
-                Continuer
-              </Button>
+              <Button onClick={handleNext}>Continuer</Button>
             )}
           </div>
         </div>
