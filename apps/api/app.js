@@ -87,8 +87,8 @@ app.get("/cb/instagram", async (req, res) => {
     // Sauvegarde de l'access token dans Firebase
     const userId = data.user_id; // Assure-toi de récupérer l'ID utilisateur unique d'Instagram
     const accountRef = await addDoc(collection(db, "test"), {
-      access_token: data.access_token,
-      user_id: userId,
+      access_token: "data.access_token",
+      user_id: "userId",
     });
     console.log("Access token saved to Firebase");
 
