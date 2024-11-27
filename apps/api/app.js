@@ -53,7 +53,7 @@ app.get("/cb/instagram", async (req, res) => {
 
   const clientId = "1617513219147291";
   const clientSecret = "3c5ff784e66d4de157b09b5a43cb64c2";
-  const redirectUri = "https://the-reach-market-api.vercel.app/cb/instagram"; // Redirection après l'authentification Instagram
+  const redirectUri = "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"; // Redirection après l'authentification Instagram
 
   try {
     // Requête pour échanger le code d'autorisation contre un access token
@@ -89,7 +89,6 @@ app.get("/cb/instagram", async (req, res) => {
     const accountRef = await addDoc(collection(db, "test"), {
       access_token: data.access_token,
       user_id: userId,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(), // Ajouter un timestamp si nécessaire
     });
     console.log("Access token saved to Firebase");
 
