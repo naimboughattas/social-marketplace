@@ -1,16 +1,36 @@
-const express = require('express');
+const http = require("http");
+const express = require("express");
+const admin = require("firebase-admin");
 
-const app = express()
-const PORT = 8000
+const serviceAccount = require("./firebase-credentials.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL:
+    "https://social-marketplace-9eb85-default-rtdb.europe-west1.firebasedatabase.app/",
+});
 
-app.get('/', (req, res) => {
-  res.send('Hello World')
-})
+const app = express();
+const PORT = 8000;
 
-app.get('/about', (req, res) => {
-  res.send('About route 🎉 ')
-})
+app.get("/", (req, res) => {
+  res.send("Hello World");
+});
+
+app.get("/about", (req, res) => {
+  res.send("About route 🎉 ");
+});
+
+app.get("/webhook/instagram", (req, res) => {
+  console.log("Webhook received:", req.body);
+  const db = admin.database();
+  const ref = db.ref("posts");
+  ref.push({
+    content: "New post content",
+    timestamp: Date.now(),
+  });
+  res.status(200).send("OK");
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
-})
+});

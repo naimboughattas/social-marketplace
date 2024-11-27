@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Slider styles */
+[data-radix-slider-thumb] {
+  all: unset;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border: 2px solid rgb(147, 51, 234);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+[data-radix-slider-thumb]:hover {
+  background-color: rgb(243, 232, 255);
+}
+
+[data-radix-slider-thumb]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(147, 51, 234, 0.2);
+}
+
+[data-radix-slider-track] {
+  position: relative;
+  height: 3px;
+  flex-grow: 1;
+  background-color: rgb(229, 231, 235);
+  border-radius: 9999px;
+}
+
+[data-radix-slider-range] {
+  position: absolute;
+  height: 100%;
+  background-color: rgb(147, 51, 234);
+  border-radius: 9999px;
+}
