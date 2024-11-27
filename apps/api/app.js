@@ -9,6 +9,8 @@ admin.initializeApp({
     "https://social-marketplace-9eb85-default-rtdb.europe-west1.firebasedatabase.app/",
 });
 
+// Obtention de la référence à la base de données
+const db = admin.database();
 const app = express();
 const PORT = 8000;
 
