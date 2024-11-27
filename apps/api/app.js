@@ -1,23 +1,30 @@
 const http = require("http");
 const express = require("express");
 const admin = require("firebase-admin");
+const { initializeApp } = require("firebase/app");
 const { getFirestore, addDoc, collection } = require("firebase/firestore");
+const { getDatabase } = require("firebase/database");
 const serviceAccount = require("./firebase-credentials.json");
 
-const firebase = admin.initializeApp({
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+admin.initializeApp({
   databaseURL:
     "https://social-marketplace-9eb85-default-rtdb.europe-west1.firebasedatabase.app/",
-  appId: process.env.VITE_FIREBASE_APP_ID,
   credential: admin.credential.cert(serviceAccount),
 });
 
+const firestoreApp = initializeApp({
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  databaseURL:
+    "https://social-marketplace-9eb85-default-rtdb.europe-west1.firebasedatabase.app/",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+});
+
 // Obtention de la référence à la base de données
-const db = getFirestore(firebase);
+const db = getFirestore(firestoreApp);
 const app = express();
 const PORT = 8000;
 
