@@ -98,6 +98,7 @@ export interface Payment {
 
 export interface SocialAccount {
   id: string;
+  code: string;
   platform: Platform;
   username: string;
   displayName: string;
