@@ -61,10 +61,7 @@ app.get("/webhook/instagram", (req, res) => {
 app.get("/cb/instagram", async (req, res) => {
   const { code } = req.query; // Récupère le code envoyé par Instagram après la validation
 
-  const q = query(
-    collection(db, "socialAccounts"),
-    where("code", "==", code)
-  );
+  const q = query(collection(db, "socialAccounts"), where("code", "==", code));
 
   const snapshot = await getDocs(q);
   const accounts = snapshot.docs.map((doc) => ({
@@ -73,8 +70,11 @@ app.get("/cb/instagram", async (req, res) => {
   }));
 
   const accountByCode = accounts.find((account) => account.code === code);
-  if (accountByCode)
-    res.redirect("https://the-reach-market.vercel.app/dashboard/my-accounts");
+  if (accountByCode) {
+    res.redirect(
+      "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
+    );
+  }
 
   const clientId = "1617513219147291";
   const clientSecret = "3c5ff784e66d4de157b09b5a43cb64c2";
@@ -100,7 +100,7 @@ app.get("/cb/instagram", async (req, res) => {
     );
     const data = await response.json();
     res.redirect(
-      `https://the-reach-market.vercel.app/dashboard/my-accounts?token=${data.access_token}`
+      `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?token=${data.access_token}`
     );
   } catch (error) {
     throw new Error("Failed to exchange code for token", error);
