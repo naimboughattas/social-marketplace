@@ -110,7 +110,7 @@ app.get("/cb/instagram", async (req, res) => {
     const { access_token, user_id } = await response.json();
     console.log("access_token:", access_token, "user_id:", user_id);
     const userResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${user_id}?fields=name,username,followers_count&access_token=${accessToken}`
+      `https://graph.facebook.com/v21.0/${user_id}?fields=name,username,followers_count&access_token=${access_token}`
     );
 
     const igData = await userResponse.json();
