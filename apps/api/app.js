@@ -113,7 +113,8 @@ app.get("/cb/instagram", async (req, res) => {
       `https://graph.facebook.com/v21.0/me/accounts?fields=instagram_business_account&access_token=${access_token}`
     );
     const pageData = await pageResponse.json();
-    const igBusinessAccountId =
+    console.log("pageData:", pageData);
+    const igBusinessAccountId = 
       pageData.data[0]?.instagram_business_account?.id;
 
     if (!igBusinessAccountId) {
