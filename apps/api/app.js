@@ -219,6 +219,7 @@ app.get("/cb/tiktok", async (req, res) => {
         },
       }
     );
+    console.log("userInfoResponse:", userInfoResponse);
 
     if (!userInfoResponse.ok) {
       throw new Error("Failed to retrieve user info from TikTok");
