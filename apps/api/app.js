@@ -211,7 +211,7 @@ app.get("/cb/tiktok", async (req, res) => {
 
     // Étape 2 : Utiliser le access_token pour récupérer les informations du profil TikTok
     const userInfoResponse = await fetch(
-      `https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url`,
+      `https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,username,follower_count,following_count,likes_count,video_count`,
       {
         method: "GET",
         headers: {
@@ -240,7 +240,7 @@ app.get("/cb/tiktok", async (req, res) => {
       code,
       token: access_token,
       ...formData,
-      ...userInfoResponse.data.user,
+      ...userInfoResponse,
       createdAt: Timestamp.now(),
     });
     res.redirect(
