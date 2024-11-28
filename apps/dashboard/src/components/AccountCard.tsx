@@ -31,8 +31,8 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
     case "tiktok":
       return {
         username: data.username,
-        profile_picture_url: data.profile_picture_url,
-        followers: data.followers_count,
+        profile_picture_url: data.avatar_url,
+        followers: data.follower_count,
         category: data.category,
         country: data.country,
         city: data.city,
