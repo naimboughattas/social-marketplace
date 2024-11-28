@@ -384,7 +384,7 @@ export default function AccountSettingsModal({
               </div>
             </div> */}
 
-            <a href="https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish">
+            <a href="https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish">
               <Button size="sm" onClick={() => undefined}>
                 Synchroniser mon compte Instagram
               </Button>

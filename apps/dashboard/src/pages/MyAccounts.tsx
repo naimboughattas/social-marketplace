@@ -20,31 +20,12 @@ interface Filters {
 
 const getAccessToken = async (code: string) => {
   try {
+    console.log("api url:", `https://the-reach-market-api.vercel.app/cb/instagram`);
     const response = await fetch(
-      "https://api.instagram.com/oauth/access_token",
-      {
-        method: "POST",
-        body: new URLSearchParams({
-          client_id: "1617513219147291",
-          client_secret: "3c5ff784e66d4de157b09b5a43cb64c2",
-          grant_type: "authorization_code",
-          redirect_uri: "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts",
-          code,
-        }),
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // Form URL Encoded
-        },
-      }
+      `https://the-reach-market-api.vercel.app/cb/instagram`
     );
-    // Vérification de la réponse
-    if (!response.ok) {
-      console.error("Failed to exchange code for token", response.statusText);
-      console.error("Response:", response);
-    }
-    // Récupération des données (access token) renvoyées par Instagram
-    const data = await response.json();
-    console.log("Access token data:", data);
-    return data.access_token;
+    // const data = await response.json();
+    console.log("Instagram data:", response);
   } catch (error) {
     console.error("Failed to create account", error);
     throw error;
