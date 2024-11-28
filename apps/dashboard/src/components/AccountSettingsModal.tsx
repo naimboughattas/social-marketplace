@@ -19,7 +19,6 @@ import {
   SERVICE_DESCRIPTIONS,
 } from "../lib/types";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { setCachedData } from "../lib/redis";
 import { useAuth } from "../lib/auth";
 
 interface AccountSettingsModalProps {
@@ -84,7 +83,7 @@ export default function AccountSettingsModal({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.username) {
       addNotification({
         type: "error",
@@ -105,12 +104,20 @@ export default function AccountSettingsModal({
       ...formData,
       id: account?.id || crypto.randomUUID(),
     };
-
-    if (user) setCachedData(user.id, newAccount);
+    if (!user) return;
+    await fetch("https://the-reach-market-api.vercel.app/cache/set", {
+      method: "POST",
+      body: JSON.stringify({
+        key: user.id,
+        value: newAccount,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     // Redirection vers l'URL de synchronisation
-    window.location.href =
-      `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
+    window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
   };
 
   const renderStepContent = () => {

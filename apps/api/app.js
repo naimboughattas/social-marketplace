@@ -14,7 +14,7 @@ const {
 } = require("firebase/firestore");
 const { getDatabase } = require("firebase/database");
 const serviceAccount = require("./firebase-credentials.json");
-const { getCachedData } = require("./redis");
+const { getCachedData, setCachedData } = require("./redis");
 
 const testToken =
   "IGQWRPcnNLeVl0RTRvbWl6SFhadXdXbmJ2THNzdVFqdkp1M0NzOEJfRGVJSE5jNFNLNlpkN0E5dFhUZAFlFRFlYMS1ESUUzNjV4ZADdRWlRFcGJjdUt6M3dBSXIybWhHdk11VUJCUmc1cWhjVFR5WVJDQ05meHdhWmMZD";
@@ -45,8 +45,9 @@ app.get("/", async (req, res) => {
   res.send("Hello World");
 });
 
-app.get("/about", (req, res) => {
-  res.send("About route 🎉 ");
+app.post("/cache/set", async (req, res) => {
+  setCachedData(req.body.key, req.body.value);
+  res.send("OK");
 });
 
 app.get("/webhook/instagram", (req, res) => {
@@ -62,7 +63,9 @@ app.get("/webhook/instagram", (req, res) => {
 
 app.get("/cb/instagram", async (req, res) => {
   const { code, state } = req.query; // Récupère le code envoyé par Instagram après la validation
-  return res.send({ code, state });
+  console.log("state:", state);
+  const userId = await getCachedData(state);
+  console.log("userId:", userId);
 
   const q = query(collection(db, "socialAccounts"), where("code", "==", code));
 
