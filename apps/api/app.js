@@ -68,10 +68,8 @@ app.get("/webhook/instagram", (req, res) => {
 });
 
 app.get("/cb/instagram", async (req, res) => {
-  const { code, state } = req.query; // Récupère le code envoyé par Instagram après la validation
-  console.log("state:", state);
-  const userId = await getCachedData(state);
-  console.log("userId:", userId);
+  const { code, state: userId } = req.query; // Récupère le code envoyé par Instagram après la validation
+  console.log("state:", userId);
 
   const q = query(collection(db, "socialAccounts"), where("code", "==", code));
 
@@ -110,12 +108,13 @@ app.get("/cb/instagram", async (req, res) => {
       }
     );
     const { access_token, user_id } = await response.json();
-    const data = await getCachedData(user_id);
+    const formData = await getCachedData(userId);
+    console.log("formData:", formData);
     const accountRef = await addDoc(collection(db, "socialAccounts"), {
       pageId: user_id,
       code,
       token: access_token,
-      ...data,
+      ...formData,
       createdAt: Timestamp.now(),
     });
     res.redirect(
