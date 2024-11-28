@@ -232,13 +232,19 @@ app.get("/cb/tiktok", async (req, res) => {
     // Associer le token d'accès et d'autres données avec ton utilisateur
     // Par exemple, tu peux enregistrer ce token dans ta base de données avec l'userId
     // Exemple : Enregistrer le token dans une base de données associée à userId
-
-    res.json({
-      message: "Access token obtained successfully!",
+    const formData = await getCachedData(userId);
+    console.log("formData:", formData);
+    const accountRef = await addDoc(collection(db, "socialAccounts"), {
       userId,
-      access_token,
-      open_id,
+      code,
+      token: access_token,
+      ...formData,
+      ...userInfoResponse.data.user,
+      createdAt: Timestamp.now(),
     });
+    res.redirect(
+      "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
+    );
   } catch (error) {
     console.error("Error while retrieving access token from TikTok:", error);
     res.status(500).json({
