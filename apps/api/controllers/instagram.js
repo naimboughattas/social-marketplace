@@ -65,6 +65,7 @@ export const getInstagramUserInfo = async (accessToken) => {
 
     const data = await response.json();
     console.log(data); // Affiche les informations de l'utilisateur
+    return data; // Retourne les informations de l'utilisateur
   } catch (error) {
     console.error("Erreur lors de la requête :", error);
   }
