@@ -54,7 +54,7 @@ export const getLongLivedToken = async (shortLivedToken, appSecret) => {
 export const getInstagramUserInfo = async (accessToken) => {
   const url = "https://graph.instagram.com/v21.0/me";
   const params = new URLSearchParams({
-    fields: "user_id,username",
+    fields: "user_id,username,name,account_type,profile_picture_url,followers_count,follows_count,media_count",
     access_token: accessToken,
   });
 

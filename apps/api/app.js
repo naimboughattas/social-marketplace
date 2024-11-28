@@ -92,13 +92,9 @@ app.get("/cb/instagram", async (req, res) => {
       "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
     );
   }
-  const clientId = "1617513219147291";
-  const clientSecret = "3c5ff784e66d4de157b09b5a43cb64c2";
-  const redirectUri = "https://the-reach-market-api.vercel.app/cb/instagram"; // Redirection après l'authentification Instagram
-
+  
   try {
-    const { access_token, user_id } =
-      await getAccessToken(code);
+    const { access_token, user_id } = await getAccessToken(code);
     // const shortLivedToken = "IGQWROeUt1ZA3lvU2p2SW1MeW10Qk90S1RLS2JGc2p1UndJeXlZAcUY4dkpKWGJBMVVKNVZAWeEx1OW10NU1BVFNod01hUlZAqNEpyY3ZAXYVpUejJRMkM0X3MxbWZAWYkJYVFV2Sk0tS0luQW10Y2xJVW1ITlFVTXFYUTdzMTVZAS2J2eUgwd0kZD";
     console.log("short lived token:", access_token);
 
@@ -117,9 +113,6 @@ app.get("/cb/instagram", async (req, res) => {
     res.redirect(
       "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
     );
-    // res.redirect(
-    //   `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?code=${code}&token=${data.access_token}&user_id=${data.user_id}`
-    // );
   } catch (error) {
     console.log(error);
     throw new Error("Failed to exchange code for token", error);
