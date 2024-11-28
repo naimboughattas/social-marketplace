@@ -106,7 +106,7 @@ export default function AccountSettingsModal({
     };
     console.log(user);
     if (!user) return;
-    await fetch("http://localhost:8000/cache/set", {
+    await fetch("https://the-reach-market-api.vercel.app/cache/set", {
       method: "POST",
       body: JSON.stringify({
         key: user.id,
@@ -118,7 +118,7 @@ export default function AccountSettingsModal({
     });
 
     // Redirection vers l'URL de synchronisation
-    window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
+    window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
   };
 
   const renderStepContent = () => {
