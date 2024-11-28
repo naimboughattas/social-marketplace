@@ -19,6 +19,8 @@ import {
   SERVICE_DESCRIPTIONS,
 } from "../lib/types";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { setCachedData } from "../lib/redis";
+import { useAuth } from "../lib/auth";
 
 interface AccountSettingsModalProps {
   account?: SocialAccount;
@@ -33,6 +35,7 @@ export default function AccountSettingsModal({
   onClose,
   onSave,
 }: AccountSettingsModalProps) {
+  const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [step, setStep] = useState<Step>("platform");
   const [formData, setFormData] = useState<Partial<SocialAccount>>(
@@ -103,12 +106,11 @@ export default function AccountSettingsModal({
       id: account?.id || crypto.randomUUID(),
     };
 
-    // Sauvegarde dans le cache
-    localStorage.setItem("socialAccount", JSON.stringify(newAccount));
+    if (user) setCachedData(user.id, newAccount);
 
     // Redirection vers l'URL de synchronisation
     window.location.href =
-      "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish";
+      `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`·;
   };
 
   const renderStepContent = () => {
