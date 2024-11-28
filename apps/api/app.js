@@ -124,7 +124,7 @@ app.get("/cb/instagram", async (req, res) => {
 
     // Étape 2 : Récupérer les informations du compte Instagram Business
     const igResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${igBusinessAccountId}?fields=id,ig_id,name,username,followers_count,follows_count,media_count,profile_picture_url&access_token=${accessToken}`
+      `https://graph.facebook.com/v21.0/${igBusinessAccountId}?fields=id,ig_id,name,username,followers_count,follows_count,media_count,profile_picture_url`
     );
     const igData = await igResponse.json();
     const formData = await getCachedData(userId);
