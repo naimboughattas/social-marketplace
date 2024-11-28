@@ -126,6 +126,14 @@ export default function AccountSettingsModal({
       const { url } = await response.json();
       window.location.href = url;
     }
+
+    if (formData.platform === "tiktok") {
+      const response = await fetch(
+        `https://the-reach-market-api.vercel.app/tiktok/auth/url`
+      );
+      const { url } = await response.json();
+      window.location.href = url;
+    }
   };
 
   const renderStepContent = () => {

@@ -167,12 +167,35 @@ app.get("/cb/youtube", async (req, res) => {
   // res.send(response);
 });
 
+app.get("cb/tiktok", async (req, res) => {
+  const code = req.query.code;
+  const userId = req.query.state;
+  console.log("Authorization code:", code);
+  console.log("userId:", userId);
+});
+
 app.get("/youtube/auth/url", async (req, res) => {
   const userId = req.query.userId;
   // Exemple d'utilisation
   const url = await getAuthUrl(userId); // Affiche l'URL d'autorisation
 
   res.json({ url });
+});
+
+app.get("/tiktok/auth/url", (req, res) => {
+  // const csrfState = Math.random().toString(36).substring(2);
+  // res.cookie('csrfState', csrfState, { maxAge: 60000 });
+
+  let url = "https://www.tiktok.com/v2/auth/authorize/";
+
+  // the following params need to be in `application/x-www-form-urlencoded` format.
+  url += "?client_key=awo85qv28evi6fmx";
+  url += "&scope=user.info.basic";
+  url += "&response_type=code";
+  url += "&redirect_uri=https://the-reach-market-api.vercel.app/cb/tiktok";
+  // url += '&state=' + csrfState;
+
+  res.redirect(url);
 });
 
 app.listen(PORT, () => {
