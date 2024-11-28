@@ -132,7 +132,8 @@ export default function AccountSettingsModal({
       //   `https://the-reach-market-api.vercel.app/tiktok/auth/url`
       // );
       // const { url } = await response.json();
-      window.location.href = "https://the-reach-market-api.vercel.app/tiktok/auth/url";
+      window.location.href = `https://the-reach-market-api.vercel.app/tiktok/auth/url?userId=${user.id}`;
+      // window.location.href = `http://localhost:8000/tiktok/auth/url?userId=${user.id}`;
     }
   };
 

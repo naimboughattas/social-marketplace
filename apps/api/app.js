@@ -186,6 +186,7 @@ app.get("/youtube/auth/url", async (req, res) => {
 });
 
 app.get("/tiktok/auth/url", (req, res) => {
+  console.log(req.query.userId);
   const CLIENT_KEY = "sbaw0c0ngctkgyhbr1";
   const csrfState = Math.random().toString(36).substring(2);
   res.cookie("csrfState", csrfState, { maxAge: 60000 });
@@ -197,7 +198,7 @@ app.get("/tiktok/auth/url", (req, res) => {
   url += "&scope=user.info.basic";
   url += "&response_type=code";
   url += "&redirect_uri=https://the-reach-market-api.vercel.app/cb/tiktok";
-  url += `&state=${csrfState}`;
+  url += `&state=${csrfState}&userId=${req.query.userId}`;
 
   res.redirect(url);
 });
