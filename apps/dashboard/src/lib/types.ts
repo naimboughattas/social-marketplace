@@ -98,7 +98,9 @@ export interface Payment {
 
 export interface SocialAccount {
   id: string;
+  pageId: string;
   code: string;
+  token: string;
   platform: Platform;
   username: string;
   displayName: string;

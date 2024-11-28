@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Info } from "lucide-react";
+import { Info, X } from "lucide-react";
 import Button from "./Button";
 import Input from "./Input";
 import CityInput from "./CityInput";
@@ -12,12 +12,11 @@ import {
   PLATFORM_LABELS,
   PLATFORM_SERVICES,
   SERVICE_LABELS,
-  SERVICE_DESCRIPTIONS,
   CATEGORIES,
   LANGUAGES,
   COUNTRIES,
   SocialAccount,
-  Service,
+  SERVICE_DESCRIPTIONS,
 } from "../lib/types";
 import * as Tooltip from "@radix-ui/react-tooltip";
 
@@ -57,12 +56,6 @@ export default function AccountSettingsModal({
       rating: 5.0,
     }
   );
-
-  const [verificationCode] = useState(() => {
-    const timestamp = Date.now().toString(36);
-    const randomStr = Math.random().toString(36).substring(2, 8);
-    return `VERIFY-${randomStr}-${timestamp}`.toUpperCase();
-  });
 
   const steps: Step[] = [
     "platform",
@@ -106,11 +99,14 @@ export default function AccountSettingsModal({
     const newAccount = {
       ...formData,
       id: account?.id || crypto.randomUUID(),
-      verificationCode,
     };
 
-    onSave(newAccount);
-    onClose();
+    // Sauvegarde dans le cache
+    localStorage.setItem("socialAccount", JSON.stringify(newAccount));
+
+    // Redirection vers l'URL de synchronisation
+    window.location.href =
+      "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish";
   };
 
   const renderStepContent = () => {
@@ -384,7 +380,7 @@ export default function AccountSettingsModal({
               </div>
             </div> */}
 
-            <a href="https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish">
+            <a href="https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish">
               <Button size="sm" onClick={() => undefined}>
                 Synchroniser mon compte Instagram
               </Button>

@@ -18,20 +18,6 @@ interface Filters {
   country: string;
 }
 
-const getAccessToken = async (code: string) => {
-  try {
-    console.log("api url:", `https://the-reach-market-api.vercel.app/cb/instagram`);
-    const response = await fetch(
-      `https://the-reach-market-api.vercel.app/cb/instagram`
-    );
-    // const data = await response.json();
-    console.log("Instagram data:", response);
-  } catch (error) {
-    console.error("Failed to create account", error);
-    throw error;
-  }
-};
-
 export default function MyAccounts() {
   const {
     accounts,
@@ -43,7 +29,8 @@ export default function MyAccounts() {
     handleStartVerification,
   } = useAccounts();
   // get the code callback from instagram redirection
-  const code = new URLSearchParams(window.location.search).get("code");
+  const token = new URLSearchParams(window.location.search).get("token");
+  const user_id = new URLSearchParams(window.location.search).get("user_id");
   const [isCreating, setIsCreating] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -81,27 +68,35 @@ export default function MyAccounts() {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (code) {
-        if (accounts.length > 0) {
-          const account = accounts.find((acc) => acc.code === code);
-          if (account) {
-            console.log("Account already exists:", account);
-            return;
-          }
-          setIsCreating(true);
-          const token = await getAccessToken(code);
-          console.log("Instagram token:", token);
-        } else {
-          const token = await getAccessToken(code);
-          console.log("Instagram token:", token);
-        }
-        console.log("Instagram code:", code);
-      }
-    };
+    if (token && user_id) {
+      const createAccount = async () => {
+        try {
+          // Récupérer les données du formulaire sauvegardées dans le localStorage
+          const savedFormData = localStorage.getItem("formData");
+          console.log("savedFormData", savedFormData);
+          const parsedFormData = savedFormData ? JSON.parse(savedFormData) : {};
 
-    fetchData();
-  }, [code, accounts]);
+          // Construire un objet SocialAccount à partir des données
+          const newAccount: SocialAccount = {
+            pageId: user_id,
+            token, // Inclure le token
+            ...parsedFormData,
+          };
+          console.log("newAccount", newAccount);
+
+          // Appeler handleCreateAccount avec le nouvel objet
+          await handleCreateAccount(newAccount);
+
+          // Nettoyer le localStorage après la création
+          localStorage.removeItem("formData");
+        } catch (error) {
+          console.error("Erreur lors de la création du compte :", error);
+        }
+      };
+
+      createAccount();
+    }
+  }, [token, user_id, handleCreateAccount]);
 
   if (isFetching || isCreating) {
     return (
