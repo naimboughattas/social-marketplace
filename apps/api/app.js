@@ -175,6 +175,10 @@ app.get("/cb/tiktok", async (req, res) => {
   const userId = req.query.state;
   console.log("Authorization code:", code);
   console.log("userId:", userId);
+  res.send({
+    code,
+    userId,
+  });
 });
 
 app.get("/youtube/auth/url", async (req, res) => {
