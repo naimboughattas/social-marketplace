@@ -108,13 +108,13 @@ export default function AccountSettingsModal({
     if (!user) return;
     await fetch("https://the-reach-market-api.vercel.app/cache/set", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         key: user.id,
         value: newAccount,
       }),
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
 
     // Redirection vers l'URL de synchronisation
