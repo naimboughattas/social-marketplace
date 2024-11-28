@@ -10,11 +10,11 @@ export const getCachedData = async (key) => {
   await client.connect();
   const cachedData = await client.get(key);
   await client.disconnect();
-  return cachedData;
+  return cachedData ? JSON.parse(cachedData) : null;
 };
 
 export const setCachedData = async (key, value) => {
   await client.connect();
-  await client.set(key, value);
+  await client.set(key, JSON.stringify(value));
   await client.disconnect();
 };

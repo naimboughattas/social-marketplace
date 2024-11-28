@@ -50,9 +50,9 @@ app.get("/", async (req, res) => {
   res.send("Hello World");
 });
 
-app.post("/cache/set", jsonParser, (req, res) => {
-  console.log("Setting cache:", req.body);
-  setCachedData(req.body.key, req.body.value);
+app.post("/cache/set", jsonParser, async (req, res) => {
+  console.log("Setting cache:", req.body.key, req.body.value);
+  await setCachedData(req.body.key, req.body.value);
   res.send("OK");
 });
 
