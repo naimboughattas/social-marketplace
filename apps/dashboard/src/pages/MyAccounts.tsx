@@ -88,7 +88,7 @@ export default function MyAccounts() {
           console.log("newAccount", newAccount);
 
           // Appeler handleCreateAccount avec le nouvel objet
-          // await handleCreateAccount(newAccount);
+          await handleCreateAccount(newAccount);
 
           // Nettoyer le localStorage après la création
           localStorage.removeItem("socialAccount");
