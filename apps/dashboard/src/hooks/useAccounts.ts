@@ -25,6 +25,7 @@ export function useAccounts() {
       try {
         setLoading(true);
         const fetchedAccounts = await getAccounts(user.id);
+        console.log(fetchedAccounts);
         setAccounts(fetchedAccounts);
         setError(null);
       } catch (err) {

@@ -20,6 +20,7 @@ import {
 } from "../lib/types";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { useAuth } from "../lib/auth";
+import { platform } from "os";
 
 interface AccountSettingsModalProps {
   account?: SocialAccount;
@@ -114,15 +115,17 @@ export default function AccountSettingsModal({
       }),
     });
 
-    const response = await fetch(
-      `https://the-reach-market-api.vercel.app/youtube/auth/url?userId=${user.id}`
-    );
-    const { url } = await response.json();
-    console.log(url);
-    window.location.href = url;
+    if (formData.platform === "instagram") {
+      window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
+    }
 
-    // Redirection vers l'URL de synchronisation
-    // window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
+    if (formData.platform === "youtube") {
+      const response = await fetch(
+        `https://the-reach-market-api.vercel.app/youtube/auth/url?userId=${user.id}`
+      );
+      const { url } = await response.json();
+      window.location.href = url;
+    }
   };
 
   const renderStepContent = () => {
