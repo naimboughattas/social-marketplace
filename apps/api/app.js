@@ -111,6 +111,7 @@ app.get("/cb/instagram", async (req, res) => {
     const formData = await getCachedData(userId);
     console.log("formData:", formData);
     const accountRef = await addDoc(collection(db, "socialAccounts"), {
+      userId,
       pageId: user_id,
       code,
       token: access_token,
