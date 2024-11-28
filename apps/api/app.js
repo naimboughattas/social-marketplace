@@ -50,7 +50,7 @@ app.get("/", async (req, res) => {
 
 app.post("/cache/set", async (req, res) => {
   console.log("Setting cache:", req.body);
-  // setCachedData(req.body.key, req.body.value);
+  setCachedData(req.body.key, req.body.value);
   res.send("OK");
 });
 
