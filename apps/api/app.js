@@ -63,7 +63,7 @@ app.get("/cb/instagram", async (req, res) => {
 
   const q = query(
     collection(db, "socialAccounts"),
-    where("userId", "==", userId)
+    where("code", "==", code)
   );
 
   const snapshot = await getDocs(q);
