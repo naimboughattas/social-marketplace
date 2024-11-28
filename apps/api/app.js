@@ -1,4 +1,5 @@
 const http = require("http");
+const cors = require("cors");
 const express = require("express");
 const admin = require("firebase-admin");
 const { initializeApp } = require("firebase/app");
@@ -41,12 +42,15 @@ const db = getFirestore(firestoreApp);
 const app = express();
 const PORT = 8000;
 
+app.use(cors());
+
 app.get("/", async (req, res) => {
   res.send("Hello World");
 });
 
 app.post("/cache/set", async (req, res) => {
-  setCachedData(req.body.key, req.body.value);
+  console.log("Setting cache:", req.body);
+  // setCachedData(req.body.key, req.body.value);
   res.send("OK");
 });
 

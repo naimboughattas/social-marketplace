@@ -104,8 +104,9 @@ export default function AccountSettingsModal({
       ...formData,
       id: account?.id || crypto.randomUUID(),
     };
+    console.log(user);
     if (!user) return;
-    await fetch("https://the-reach-market-api.vercel.app/cache/set", {
+    await fetch("http://localhost:8000/cache/set", {
       method: "POST",
       body: JSON.stringify({
         key: user.id,
