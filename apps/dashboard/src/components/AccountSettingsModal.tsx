@@ -106,7 +106,7 @@ export default function AccountSettingsModal({
     };
     console.log(user);
     if (!user) return;
-    await fetch("http://localhost:8000/cache/set", {
+    await fetch("https://the-reach-market-api.vercel.app/cache/set", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
