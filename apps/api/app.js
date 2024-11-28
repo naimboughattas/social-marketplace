@@ -273,7 +273,7 @@ app.get("/tiktok/auth/url", (req, res) => {
 
   // the following params need to be in `application/x-www-form-urlencoded` format.
   url += `?client_key=${CLIENT_KEY}`;
-  url += "&scope=user.info.basic";
+  url += "&scope=user.info.basic,user.info.profile,user.info.stats";
   url += "&response_type=code";
   url += "&redirect_uri=https://the-reach-market-api.vercel.app/cb/tiktok";
   url += `&state=${req.query.userId}`;
