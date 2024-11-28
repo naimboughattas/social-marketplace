@@ -57,6 +57,8 @@ export default function AccountSettingsModal({
     }
   );
 
+  console.log(localStorage.getItem("socialAccount"));
+
   const steps: Step[] = [
     "platform",
     "info",

@@ -100,7 +100,7 @@ app.get("/cb/instagram", async (req, res) => {
     const data = await response.json();
     console.log(data);
     res.redirect(
-      `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?token=${data.access_token}&user_id=${data.user_id}`
+      `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?code=${code}&token=${data.access_token}&user_id=${data.user_id}`
     );
   } catch (error) {
     console.log(error);

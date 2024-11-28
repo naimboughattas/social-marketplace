@@ -30,6 +30,7 @@ export default function MyAccounts() {
   } = useAccounts();
   // get the code callback from instagram redirection
   const token = new URLSearchParams(window.location.search).get("token");
+  const code = new URLSearchParams(window.location.search).get("code");
   const user_id = new URLSearchParams(window.location.search).get("user_id");
   const [isCreating, setIsCreating] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -42,6 +43,7 @@ export default function MyAccounts() {
     language: "",
     country: "",
   });
+  console.log(localStorage.getItem("socialAccount"));
 
   const filteredAccounts = accounts.filter((account) => {
     // Filter by tab
@@ -68,27 +70,28 @@ export default function MyAccounts() {
   });
 
   useEffect(() => {
-    if (token && user_id) {
+    if (token && user_id && code) {
       const createAccount = async () => {
         try {
           // Récupérer les données du formulaire sauvegardées dans le localStorage
-          const savedFormData = localStorage.getItem("formData");
+          const savedFormData = localStorage.getItem("socialAccount");
           console.log("savedFormData", savedFormData);
           const parsedFormData = savedFormData ? JSON.parse(savedFormData) : {};
 
           // Construire un objet SocialAccount à partir des données
           const newAccount: SocialAccount = {
             pageId: user_id,
+            code,
             token, // Inclure le token
             ...parsedFormData,
           };
           console.log("newAccount", newAccount);
 
           // Appeler handleCreateAccount avec le nouvel objet
-          await handleCreateAccount(newAccount);
+          // await handleCreateAccount(newAccount);
 
           // Nettoyer le localStorage après la création
-          localStorage.removeItem("formData");
+          localStorage.removeItem("socialAccount");
         } catch (error) {
           console.error("Erreur lors de la création du compte :", error);
         }
@@ -96,7 +99,7 @@ export default function MyAccounts() {
 
       createAccount();
     }
-  }, [token, user_id, handleCreateAccount]);
+  }, [token, code, user_id, handleCreateAccount]);
 
   if (isFetching || isCreating) {
     return (
