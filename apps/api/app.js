@@ -78,8 +78,7 @@ app.get("/cb/instagram", async (req, res) => {
 
   const clientId = "1617513219147291";
   const clientSecret = "3c5ff784e66d4de157b09b5a43cb64c2";
-  const redirectUri =
-    "https://the-reach-market-api.vercel.app/cb/instagram"; // Redirection après l'authentification Instagram
+  const redirectUri = "https://the-reach-market-api.vercel.app/cb/instagram"; // Redirection après l'authentification Instagram
 
   try {
     const response = await fetch(
@@ -101,7 +100,7 @@ app.get("/cb/instagram", async (req, res) => {
     const data = await response.json();
     console.log(data);
     res.redirect(
-      `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?token=${data.access_token}`
+      `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?token=${data.access_token}&user_id=${data.user_id}`
     );
   } catch (error) {
     console.log(error);
