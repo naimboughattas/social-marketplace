@@ -113,7 +113,7 @@ app.get("/cb/instagram", async (req, res) => {
       `https://graph.facebook.com/v21.0/${user_id}?fields=name,username,followers_count&access_token=${accessToken}`
     );
 
-    const data = await userResponse.json();
+    const igData = await userResponse.json();
     const formData = await getCachedData(userId);
     console.log("formData:", formData);
     const accountRef = await addDoc(collection(db, "socialAccounts"), {
