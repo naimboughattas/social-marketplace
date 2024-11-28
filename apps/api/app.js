@@ -1,5 +1,6 @@
 const http = require("http");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 const express = require("express");
 const admin = require("firebase-admin");
 const { initializeApp } = require("firebase/app");
@@ -20,6 +21,7 @@ const { getCachedData, setCachedData } = require("./redis");
 const testToken =
   "IGQWRPcnNLeVl0RTRvbWl6SFhadXdXbmJ2THNzdVFqdkp1M0NzOEJfRGVJSE5jNFNLNlpkN0E5dFhUZAFlFRFlYMS1ESUUzNjV4ZADdRWlRFcGJjdUt6M3dBSXIybWhHdk11VUJCUmc1cWhjVFR5WVJDQ05meHdhWmMZD";
 
+const jsonParser = bodyParser.json();
 admin.initializeApp({
   databaseURL:
     "https://social-marketplace-9eb85-default-rtdb.europe-west1.firebasedatabase.app/",
@@ -48,8 +50,8 @@ app.get("/", async (req, res) => {
   res.send("Hello World");
 });
 
-app.post("/cache/set", async (req, res) => {
-  console.log("Setting cache:", req);
+app.post("/cache/set", jsonParser, (req, res) => {
+  console.log("Setting cache:", req.body);
   setCachedData(req.body.key, req.body.value);
   res.send("OK");
 });
