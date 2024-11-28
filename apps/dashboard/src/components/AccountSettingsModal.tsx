@@ -128,11 +128,11 @@ export default function AccountSettingsModal({
     }
 
     if (formData.platform === "tiktok") {
-      const response = await fetch(
-        `https://the-reach-market-api.vercel.app/tiktok/auth/url`
-      );
-      const { url } = await response.json();
-      window.location.href = url;
+      // const response = await fetch(
+      //   `https://the-reach-market-api.vercel.app/tiktok/auth/url`
+      // );
+      // const { url } = await response.json();
+      window.location.href = "https://the-reach-market-api.vercel.app/tiktok/auth/url";
     }
   };
 
