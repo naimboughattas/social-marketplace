@@ -17,7 +17,11 @@ const {
 const { getDatabase } = require("firebase/database");
 const serviceAccount = require("./firebase-credentials.json");
 const { getCachedData, setCachedData } = require("./redis");
-const { getInstagramData } = require("./controllers/instagram");
+const {
+  getLongLivedToken,
+  getInstagramBusinessAccountId,
+  getInstagramProfileData,
+} = require("./controllers/instagram");
 
 const testToken =
   "IGQWRPcnNLeVl0RTRvbWl6SFhadXdXbmJ2THNzdVFqdkp1M0NzOEJfRGVJSE5jNFNLNlpkN0E5dFhUZAFlFRFlYMS1ESUUzNjV4ZADdRWlRFcGJjdUt6M3dBSXIybWhHdk11VUJCUmc1cWhjVFR5WVJDQ05meHdhWmMZD";
@@ -110,30 +114,33 @@ app.get("/cb/instagram", async (req, res) => {
     const { access_token: shortLivedToken, user_id } = await response.json();
     console.log("short lived token:", shortLivedToken);
 
-    const longLiveTokenResponse = await fetch(
-      `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${clientSecret}&access_token=${shortLivedToken}`,
-      {
-        method: "GET",
-      }
+    // Étape 1 : Obtenir un long-lived token
+    const longLivedToken = await getLongLivedToken(
+      shortLivedToken,
+      clientSecret
     );
+    if (!longLivedToken) return;
 
-    const { access_token } = await longLiveTokenResponse.json();
-    console.log("long live token:", access_token);
-    const userResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${user_id}?fields=name,username,followers_count&access_token=${access_token}`
+    // Étape 2 : Obtenir l'ID Instagram professionnel
+    const igBusinessAccountId =
+      await getInstagramBusinessAccountId(longLivedToken);
+    if (!igBusinessAccountId) return;
+
+    // Étape 3 : Obtenir les données du profil
+    const profileData = await getInstagramProfileData(
+      igBusinessAccountId,
+      longLivedToken
     );
-
-    const igData = await userResponse.json();
-    console.log("igData:", igData);
+    console.log("igData:", profileData);
     const formData = await getCachedData(userId);
     console.log("formData:", formData);
     const accountRef = await addDoc(collection(db, "socialAccounts"), {
       userId,
       pageId: user_id,
       code,
-      token: access_token,
+      token: longLivedToken,
       ...formData,
-      ...igData,
+      ...profileData,
       createdAt: Timestamp.now(),
     });
     res.redirect(
