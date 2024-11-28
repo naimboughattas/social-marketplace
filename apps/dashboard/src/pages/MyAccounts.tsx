@@ -75,8 +75,9 @@ export default function MyAccounts() {
         try {
           // Récupérer les données du formulaire sauvegardées dans le localStorage
           const savedFormData = localStorage.getItem("socialAccount");
-          console.log("savedFormData", savedFormData);
           const parsedFormData = savedFormData ? JSON.parse(savedFormData) : {};
+          console.log("parsedFormData", parsedFormData);
+          if (!parsedFormData) return;
 
           // Construire un objet SocialAccount à partir des données
           const newAccount: SocialAccount = {
