@@ -170,7 +170,7 @@ app.get("/cb/youtube", async (req, res) => {
   // res.send(response);
 });
 
-app.get("cb/tiktok", async (req, res) => {
+app.get("/cb/tiktok", async (req, res) => {
   const code = req.query.code;
   const userId = req.query.state;
   console.log("Authorization code:", code);
