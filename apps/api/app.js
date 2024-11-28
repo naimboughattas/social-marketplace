@@ -240,7 +240,7 @@ app.get("/cb/tiktok", async (req, res) => {
       code,
       token: access_token,
       ...formData,
-      ...userInfoResponse,
+      ...userInfoData.data.user,
       createdAt: Timestamp.now(),
     });
     res.redirect(
