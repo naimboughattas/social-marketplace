@@ -86,7 +86,6 @@ app.get("/cb/instagram", async (req, res) => {
       "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
     );
   }
-
   const clientId = "1617513219147291";
   const clientSecret = "3c5ff784e66d4de157b09b5a43cb64c2";
   const redirectUri = "https://the-reach-market-api.vercel.app/cb/instagram"; // Redirection après l'authentification Instagram
@@ -108,13 +107,24 @@ app.get("/cb/instagram", async (req, res) => {
         },
       }
     );
-    const { access_token, user_id } = await response.json();
-    console.log("access_token:", access_token, "user_id:", user_id);
+    const { access_token: shortLivedToken, user_id } = await response.json();
+    console.log("short lived token:", shortLivedToken);
+
+    const longLiveTokenResponse = await fetch(
+      `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${clientSecret}&access_token=${shortLivedToken}`,
+      {
+        method: "GET",
+      }
+    );
+
+    const { access_token } = await longLiveTokenResponse.json();
+    console.log("long live token:", access_token);
     const userResponse = await fetch(
       `https://graph.facebook.com/v21.0/${user_id}?fields=name,username,followers_count&access_token=${access_token}`
     );
 
     const igData = await userResponse.json();
+    console.log("igData:", igData);
     const formData = await getCachedData(userId);
     console.log("formData:", formData);
     const accountRef = await addDoc(collection(db, "socialAccounts"), {
