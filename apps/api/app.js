@@ -99,10 +99,12 @@ app.get("/cb/instagram", async (req, res) => {
       }
     );
     const data = await response.json();
+    console.log(data);
     res.redirect(
       `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?token=${data.access_token}`
     );
   } catch (error) {
+    console.log(error);
     throw new Error("Failed to exchange code for token", error);
   }
 });
