@@ -97,35 +97,21 @@ app.get("/cb/instagram", async (req, res) => {
   const redirectUri = "https://the-reach-market-api.vercel.app/cb/instagram"; // Redirection après l'authentification Instagram
 
   try {
-    const { access_token: shortLivedToken, user_id } =
+    const { access_token, user_id } =
       await getAccessToken(code);
     // const shortLivedToken = "IGQWROeUt1ZA3lvU2p2SW1MeW10Qk90S1RLS2JGc2p1UndJeXlZAcUY4dkpKWGJBMVVKNVZAWeEx1OW10NU1BVFNod01hUlZAqNEpyY3ZAXYVpUejJRMkM0X3MxbWZAWYkJYVFV2Sk0tS0luQW10Y2xJVW1ITlFVTXFYUTdzMTVZAS2J2eUgwd0kZD";
-    console.log("short lived token:", shortLivedToken);
+    console.log("short lived token:", access_token);
 
-    const pageData = await getInstagramUserInfo(shortLivedToken);
-    console.log("pageData:", pageData);
-    const instagramBusinessAccountId =
-      pageData.data[0]?.instagram_business_account?.id;
-
-    if (!instagramBusinessAccountId) {
-      throw new Error("Aucun compte Instagram Business trouvé.");
-    }
-
-    // Étape 2 : Récupérer le followers_count
-    const instaResponse = await fetch(
-      `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}?fields=followers_count,username,name&access_token=${shortLivedToken}`
-    );
-    const profileData = await instaResponse.json();
-    console.log("igData:", profileData);
+    const pageData = await getInstagramUserInfo(access_token);
     const formData = await getCachedData(userId);
     console.log("formData:", formData);
     const accountRef = await addDoc(collection(db, "socialAccounts"), {
       userId,
       pageId: user_id,
       code,
-      token: longLivedToken,
+      token: access_token,
       ...formData,
-      ...profileData,
+      ...pageData,
       createdAt: Timestamp.now(),
     });
     res.redirect(
