@@ -21,6 +21,8 @@ const {
   getLongLivedToken,
   getInstagramBusinessAccountId,
   getInstagramProfileData,
+  getAccessToken,
+  getInstagramUserInfo,
 } = require("./controllers/instagram");
 
 const testToken =
@@ -95,31 +97,12 @@ app.get("/cb/instagram", async (req, res) => {
   const redirectUri = "https://the-reach-market-api.vercel.app/cb/instagram"; // Redirection après l'authentification Instagram
 
   try {
-    const response = await fetch(
-      "https://api.instagram.com/oauth/access_token",
-      {
-        method: "POST",
-        body: new URLSearchParams({
-          client_id: clientId,
-          client_secret: clientSecret,
-          grant_type: "authorization_code",
-          scope: "user_profile,user_media",
-          redirect_uri: redirectUri,
-          code,
-        }),
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // Form URL Encoded
-        },
-      }
-    );
-    const { access_token: shortLivedToken, user_id } = await response.json();
+    const { access_token: shortLivedToken, user_id } =
+      await getAccessToken(code);
     // const shortLivedToken = "IGQWROeUt1ZA3lvU2p2SW1MeW10Qk90S1RLS2JGc2p1UndJeXlZAcUY4dkpKWGJBMVVKNVZAWeEx1OW10NU1BVFNod01hUlZAqNEpyY3ZAXYVpUejJRMkM0X3MxbWZAWYkJYVFV2Sk0tS0luQW10Y2xJVW1ITlFVTXFYUTdzMTVZAS2J2eUgwd0kZD";
     console.log("short lived token:", shortLivedToken);
 
-    const pageResponse = await fetch(
-      `https://graph.facebook.com/v17.0/me/accounts?fields=instagram_business_account&access_token=${shortLivedToken}`
-    );
-    const pageData = await pageResponse.json();
+    const pageData = await getInstagramUserInfo(shortLivedToken);
     console.log("pageData:", pageData);
     const instagramBusinessAccountId =
       pageData.data[0]?.instagram_business_account?.id;
