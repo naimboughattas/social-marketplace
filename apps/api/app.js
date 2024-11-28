@@ -103,6 +103,7 @@ app.get("/cb/instagram", async (req, res) => {
           client_id: clientId,
           client_secret: clientSecret,
           grant_type: "authorization_code",
+          scope: "user_profile,user_media",
           redirect_uri: redirectUri,
           code,
         }),
@@ -112,25 +113,26 @@ app.get("/cb/instagram", async (req, res) => {
       }
     );
     const { access_token: shortLivedToken, user_id } = await response.json();
+    // const shortLivedToken = "IGQWROeUt1ZA3lvU2p2SW1MeW10Qk90S1RLS2JGc2p1UndJeXlZAcUY4dkpKWGJBMVVKNVZAWeEx1OW10NU1BVFNod01hUlZAqNEpyY3ZAXYVpUejJRMkM0X3MxbWZAWYkJYVFV2Sk0tS0luQW10Y2xJVW1ITlFVTXFYUTdzMTVZAS2J2eUgwd0kZD";
     console.log("short lived token:", shortLivedToken);
 
-    // Étape 1 : Obtenir un long-lived token
-    const longLivedToken = await getLongLivedToken(
-      shortLivedToken,
-      clientSecret
+    const pageResponse = await fetch(
+      `https://graph.facebook.com/v17.0/me/accounts?fields=instagram_business_account&access_token=${shortLivedToken}`
     );
-    if (!longLivedToken) return;
+    const pageData = await pageResponse.json();
+    console.log("pageData:", pageData);
+    const instagramBusinessAccountId =
+      pageData.data[0]?.instagram_business_account?.id;
 
-    // Étape 2 : Obtenir l'ID Instagram professionnel
-    const igBusinessAccountId =
-      await getInstagramBusinessAccountId(longLivedToken);
-    if (!igBusinessAccountId) return;
+    if (!instagramBusinessAccountId) {
+      throw new Error("Aucun compte Instagram Business trouvé.");
+    }
 
-    // Étape 3 : Obtenir les données du profil
-    const profileData = await getInstagramProfileData(
-      igBusinessAccountId,
-      longLivedToken
+    // Étape 2 : Récupérer le followers_count
+    const instaResponse = await fetch(
+      `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}?fields=followers_count,username,name&access_token=${shortLivedToken}`
     );
+    const profileData = await instaResponse.json();
     console.log("igData:", profileData);
     const formData = await getCachedData(userId);
     console.log("formData:", formData);
