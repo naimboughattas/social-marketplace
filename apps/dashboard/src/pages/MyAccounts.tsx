@@ -69,41 +69,6 @@ export default function MyAccounts() {
     return true;
   });
 
-  // useEffect(() => {
-  //   if (token && user_id && code) {
-  //     const createAccount = async () => {
-  //       try {
-  //         // Récupérer les données du formulaire sauvegardées dans le localStorage
-  //         const savedFormData = localStorage.getItem("socialAccount");
-  //         const parsedFormData = savedFormData ? JSON.parse(savedFormData) : {};
-  //         console.log("parsedFormData", parsedFormData);
-  //         if (parsedFormData) {
-  //           // Construire un objet SocialAccount à partir des données
-  //           const newAccount: SocialAccount = {
-  //             pageId: user_id,
-  //             code,
-  //             token, // Inclure le token
-  //             ...parsedFormData,
-  //           };
-  //           console.log("newAccount", newAccount);
-
-  //           // Appeler handleCreateAccount avec le nouvel objet
-  //           await handleCreateAccount(newAccount);
-
-  //           // Nettoyer le localStorage après la création
-  //           localStorage.removeItem("socialAccount");
-  //           window.location.href =
-  //             "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts";
-  //         }
-  //       } catch (error) {
-  //         console.error("Erreur lors de la création du compte :", error);
-  //       }
-  //     };
-
-  //     createAccount();
-  //   }
-  // }, [token, code, user_id, handleCreateAccount]);
-
   if (isFetching || isCreating) {
     return (
       <DashboardLayout>

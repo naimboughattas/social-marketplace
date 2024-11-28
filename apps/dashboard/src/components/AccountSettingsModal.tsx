@@ -58,9 +58,6 @@ export default function AccountSettingsModal({
       rating: 5.0,
     }
   );
-
-  console.log(localStorage.getItem("socialAccount"));
-
   const steps: Step[] = [
     "platform",
     "info",
@@ -84,21 +81,21 @@ export default function AccountSettingsModal({
   };
 
   const handleSubmit = async () => {
-    if (!formData.username) {
-      addNotification({
-        type: "error",
-        message: "Veuillez entrer un nom d'utilisateur",
-      });
-      return;
-    }
+    // if (!formData.username) {
+    //   addNotification({
+    //     type: "error",
+    //     message: "Veuillez entrer un nom d'utilisateur",
+    //   });
+    //   return;
+    // }
 
-    if (!formData.availableServices?.length) {
-      addNotification({
-        type: "error",
-        message: "Veuillez sélectionner au moins un service",
-      });
-      return;
-    }
+    // if (!formData.availableServices?.length) {
+    //   addNotification({
+    //     type: "error",
+    //     message: "Veuillez sélectionner au moins un service",
+    //   });
+    //   return;
+    // }
 
     const newAccount = {
       ...formData,
@@ -117,8 +114,15 @@ export default function AccountSettingsModal({
       }),
     });
 
+    const response = await fetch(
+      `https://the-reach-market-api.vercel.app/youtube/auth/url?userId=${user.id}`
+    );
+    const { url } = await response.json();
+    console.log(url);
+    window.location.href = url;
+
     // Redirection vers l'URL de synchronisation
-    window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
+    // window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
   };
 
   const renderStepContent = () => {
@@ -391,12 +395,6 @@ export default function AccountSettingsModal({
                 </div>
               </div>
             </div> */}
-
-            <a href="https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish">
-              <Button size="sm" onClick={() => undefined}>
-                Synchroniser mon compte Instagram
-              </Button>
-            </a>
           </div>
         );
     }
@@ -440,7 +438,9 @@ export default function AccountSettingsModal({
               Retour
             </Button>
             {step === steps[steps.length - 1] ? (
-              <Button onClick={handleSubmit}>Terminer</Button>
+              <Button onClick={handleSubmit}>
+                Synchroniser mon compte {formData.platform}
+              </Button>
             ) : (
               <Button onClick={handleNext}>Continuer</Button>
             )}

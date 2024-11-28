@@ -96,7 +96,7 @@ export default function AccountCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
-              src={account.profileImage}
+              src={account.profile_picture_url}
               alt={account.displayName}
               className="h-12 w-12 rounded-full object-cover ring-2 ring-white"
             />
@@ -112,7 +112,7 @@ export default function AccountCard({
                 {account.isVerified && <CheckCircle className="h-4 w-4 text-blue-500" />}
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
-                <span>{formatFollowers(account.followers)} followers</span>
+                <span>{formatFollowers(account.followers_count)} followers</span>
                 <span>•</span>
                 {isEditingLocation ? (
                   <CityInput

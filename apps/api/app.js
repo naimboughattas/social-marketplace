@@ -25,6 +25,13 @@ const {
   getInstagramUserInfo,
 } = require("./controllers/instagram");
 
+import { google } from "googleapis";
+import {
+  getAuthUrl,
+  getAccessToken as getYoutubeAccessToken,
+  getUserChannels,
+} from "./controllers/youtube";
+
 const testToken =
   "IGQWRPcnNLeVl0RTRvbWl6SFhadXdXbmJ2THNzdVFqdkp1M0NzOEJfRGVJSE5jNFNLNlpkN0E5dFhUZAFlFRFlYMS1ESUUzNjV4ZADdRWlRFcGJjdUt6M3dBSXIybWhHdk11VUJCUmc1cWhjVFR5WVJDQ05meHdhWmMZD";
 
@@ -92,7 +99,7 @@ app.get("/cb/instagram", async (req, res) => {
       "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
     );
   }
-  
+
   try {
     const { access_token, user_id } = await getAccessToken(code);
     // const shortLivedToken = "IGQWROeUt1ZA3lvU2p2SW1MeW10Qk90S1RLS2JGc2p1UndJeXlZAcUY4dkpKWGJBMVVKNVZAWeEx1OW10NU1BVFNod01hUlZAqNEpyY3ZAXYVpUejJRMkM0X3MxbWZAWYkJYVFV2Sk0tS0luQW10Y2xJVW1ITlFVTXFYUTdzMTVZAS2J2eUgwd0kZD";
@@ -117,6 +124,55 @@ app.get("/cb/instagram", async (req, res) => {
     console.log(error);
     throw new Error("Failed to exchange code for token", error);
   }
+});
+
+app.get("/cb/youtube", async (req, res) => {
+  // Après que l'utilisateur ait autorisé l'accès, récupérer le code
+  // Exemple de code reçu dans l'URL : 'authorization_code_from_redirect'
+  const code = req.query.code;
+  const userId = req.query.state;
+  console.log("Authorization code:", code);
+  console.log("userId:", userId);
+
+  // Obtenez un jeton d'accès
+  const { access_token } = await getYoutubeAccessToken(code);
+  console.log("tokens:", access_token);
+  const channels = await getUserChannels();
+  console.log("User channels:", channels, "length:", channels.length);
+
+  const channelId = channels[0].id;
+  const youtube = google.youtube("v3");
+  const apiKey = "AIzaSyD60OiLSXy_EWbC39NN1UtUblLaJxU_Zjs";
+  const response = await youtube.channels.list({
+    part: "snippet,statistics",
+    id: channelId,
+    key: apiKey,
+  });
+  const pageData = response.data.items[0].snippet;
+  console.log("pageData:", pageData);
+  const formData = await getCachedData(userId);
+  console.log("formData:", formData);
+  const accountRef = await addDoc(collection(db, "socialAccounts"), {
+    userId,
+    pageId: channelId,
+    code,
+    token: access_token,
+    ...formData,
+    ...pageData,
+    createdAt: Timestamp.now(),
+  });
+  res.redirect(
+    "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
+  );
+  // res.send(response);
+});
+
+app.get("/youtube/auth/url", async (req, res) => {
+  const userId = req.query.userId;
+  // Exemple d'utilisation
+  const url = await getAuthUrl(userId); // Affiche l'URL d'autorisation
+
+  res.json({ url });
 });
 
 app.listen(PORT, () => {
