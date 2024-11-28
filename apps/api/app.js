@@ -108,13 +108,14 @@ app.get("/cb/instagram", async (req, res) => {
       }
     );
     const { access_token, user_id } = await response.json();
+    console.log("access_token:", access_token);
     // Étape 1 : Récupérer l'ID du compte Instagram Business
     const pageResponse = await fetch(
       `https://graph.facebook.com/v21.0/me/accounts?fields=instagram_business_account&access_token=${access_token}`
     );
     const pageData = await pageResponse.json();
     console.log("pageData:", pageData);
-    const igBusinessAccountId = 
+    const igBusinessAccountId =
       pageData.data[0]?.instagram_business_account?.id;
 
     if (!igBusinessAccountId) {
