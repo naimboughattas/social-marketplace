@@ -10,9 +10,11 @@ const {
   getDocs,
   addDoc,
   doc,
+  Timestamp,
 } = require("firebase/firestore");
 const { getDatabase } = require("firebase/database");
 const serviceAccount = require("./firebase-credentials.json");
+const { getCachedData } = require("./redis");
 
 const testToken =
   "IGQWRPcnNLeVl0RTRvbWl6SFhadXdXbmJ2THNzdVFqdkp1M0NzOEJfRGVJSE5jNFNLNlpkN0E5dFhUZAFlFRFlYMS1ESUUzNjV4ZADdRWlRFcGJjdUt6M3dBSXIybWhHdk11VUJCUmc1cWhjVFR5WVJDQ05meHdhWmMZD";
@@ -59,7 +61,8 @@ app.get("/webhook/instagram", (req, res) => {
 });
 
 app.get("/cb/instagram", async (req, res) => {
-  const { code } = req.query; // Récupère le code envoyé par Instagram après la validation
+  const { code, state } = req.query; // Récupère le code envoyé par Instagram après la validation
+  return res.send({ code, state });
 
   const q = query(collection(db, "socialAccounts"), where("code", "==", code));
 
@@ -97,11 +100,21 @@ app.get("/cb/instagram", async (req, res) => {
         },
       }
     );
-    const data = await response.json();
-    console.log(data);
+    const { access_token, user_id } = await response.json();
+    const data = await getCachedData(user_id);
+    const accountRef = await addDoc(collection(db, "socialAccounts"), {
+      pageId: user_id,
+      code,
+      token: access_token,
+      ...data,
+      createdAt: Timestamp.now(),
+    });
     res.redirect(
-      `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?code=${code}&token=${data.access_token}&user_id=${data.user_id}`
+      "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
     );
+    // res.redirect(
+    //   `https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts?code=${code}&token=${data.access_token}&user_id=${data.user_id}`
+    // );
   } catch (error) {
     console.log(error);
     throw new Error("Failed to exchange code for token", error);
