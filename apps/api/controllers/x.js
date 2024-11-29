@@ -36,23 +36,20 @@ export const getTwitterData = async (username, bearerToken) => {
 
 export const getTwitterUserInfo = async (username, bearerToken) => {
   const url = `https://api.twitter.com/2/users/by/username/${username}?user.fields=profile_image_url,public_metrics`;
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${bearerToken}` },
+    });
 
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${bearerToken}` },
-  });
+    if (!response.ok)
+      throw new Error("Erreur lors de la récupération des données utilisateur");
 
-  if (!response.ok)
-    throw new Error("Erreur lors de la récupération des données utilisateur");
+    const data = await response.json();
+    const user = data.data;
 
-  const data = await response.json();
-  const user = data.data;
-
-  return {
-    username: user.username,
-    name: user.name,
-    avatar: user.profile_image_url,
-    followers: user.public_metrics.followers_count,
-    following: user.public_metrics.following_count,
-    tweets: user.public_metrics.tweet_count,
-  };
+    return user;
+  } catch (error) {
+    console.error("Erreur lors de la requête :", error);
+    return error;
+  }
 };
