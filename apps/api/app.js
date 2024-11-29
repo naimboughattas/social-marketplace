@@ -271,11 +271,11 @@ app.get("/cb/x", async (req, res) => {
   try {
     const bearerToken = await authClient.requestAccessToken(code);
     console.log("Token:", bearerToken);
-    // const response = await client.users.findMyUser({
-    //   "user.fields": ["name", "profile_image_url", "public_metrics"],
-    // });
-    const data = await getTwitterUserInfo(bearerToken);
-    console.log("User:", data);
+    const response = await client.users.findMyUser({
+      "user.fields": ["username"],
+    });
+    console.log("User:", response);
+    // const data = await getTwitterUserInfo("elonmusk", bearerToken);
     // const formData = await getCachedData(userId);
     // console.log("formData:", formData);
     // const accountRef = await addDoc(collection(db, "socialAccounts"), {

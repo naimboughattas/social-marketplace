@@ -34,8 +34,8 @@ export const getTwitterData = async (username, bearerToken) => {
   return data;
 };
 
-export const getTwitterUserInfo = async (bearerToken) => {
-  const url = `https://api.x.com/2/users/me?user.fields=profile_image_url,public_metrics`;
+export const getTwitterUserInfo = async (username, bearerToken) => {
+  const url = `https://api.twitter.com/2/users/by/username/${username}?user.fields=profile_image_url,public_metrics`;
 
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${bearerToken}` },
