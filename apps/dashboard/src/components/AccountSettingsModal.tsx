@@ -130,6 +130,10 @@ export default function AccountSettingsModal({
     if (formData.platform === "x") {
       window.location.href = `https://the-reach-market-api.vercel.app/x/auth?userId=${user.id}`;
     }
+
+    if (formData.platform === "linkedin") {
+      window.location.href = `https://the-reach-market-api.vercel.app/linkedin/auth?userId=${user.id}`;
+    }
   };
 
   const renderStepContent = () => {

@@ -47,6 +47,11 @@ app.get("/cb/tiktok", Tiktok.OAuthCallback);
 
 app.get("/cb/x", Twitter.OAuthCallback);
 
+app.get("/cb/linkedin", (req, res) => {
+  console.log("LinkedIn callback:", req.query);
+  res.send("OK");
+});
+
 app.get("/instagram/auth", Instagram.generateAuthURL);
 
 app.get("/youtube/auth", Youtube.generateAuthURL);
@@ -54,6 +59,14 @@ app.get("/youtube/auth", Youtube.generateAuthURL);
 app.get("/tiktok/auth", Tiktok.generateAuthURL);
 
 app.get("/x/auth", Twitter.generateAuthURL);
+
+app.get("/linkedin/auth", (req, res) => {
+  const CLIENT_ID = "780d3m61bi94hx";
+  const REDIRECT_URI = "https://the-reach-market-api.vercel.app/cb/linkedin";
+  res.redirect(
+    `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=foobar&scope=liteprofile%20emailaddress%20w_member_social`
+  );
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
