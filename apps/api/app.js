@@ -4,7 +4,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const express = require("express");
 const passport = require("passport");
-const session = require("express-session");
+// const session = require("express-session");
 const admin = require("firebase-admin");
 const { initializeApp } = require("firebase/app");
 const {
@@ -62,15 +62,6 @@ const db = getFirestore(firestoreApp);
 const app = express();
 const PORT = 8000;
 
-// Configuration des sessions
-app.use(
-  session({
-    secret: "votreSecret",
-    resave: false,
-    saveUninitialized: true,
-    store: new (require("session-file-store")(session))(),
-  })
-);
 app.use(cookieParser());
 app.use(cors());
 app.use(passport.initialize());
