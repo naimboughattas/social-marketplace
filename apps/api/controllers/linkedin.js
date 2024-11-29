@@ -36,6 +36,7 @@ export const getAccessToken = async () => {
     }
   );
   const tokens = await response.json();
+  console.log("tokens:", tokens);
   return tokens;
 };
 
@@ -46,5 +47,6 @@ export const getUserInfo = async (accessToken) => {
     },
   });
   const userInfo = await response.json();
+  console.log("userInfo:", userInfo);
   return userInfo;
 };
