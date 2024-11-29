@@ -69,7 +69,7 @@ app.get("/linkedin/auth", (req, res) => {
   const CLIENT_ID = "780d3m61bi94hx";
   const REDIRECT_URI = "https://the-reach-market-api.vercel.app/cb/linkedin";
   res.redirect(
-    `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${req.query.userId}&scope=r_liteprofile`
+    `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${req.query.userId}&scope=profile`
   );
 });
 
