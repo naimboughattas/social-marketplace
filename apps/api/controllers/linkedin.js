@@ -11,7 +11,7 @@ export const generateAuthURL = (req, res) => {
 export const OAuthCallback = async (req, res) => {
   const code = req.query.code; // Code d'autorisation reçu après l'authentification
   const userId = req.query.state; // userId passé dans le paramètre 'state'
-  const { access_token } = await getAccessToken();
+  const { access_token } = await getAccessToken(code);
   const userInfo = await getUserInfo(access_token);
   res.send({
     code,
@@ -29,10 +29,11 @@ export const getAccessToken = async (code) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        grant_type: "client_credentials",
+        grant_type: "authorization_code",
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
-        
+        code,
+        redirect_uri: "https://the-reach-market-api.vercel.app/cb/linkedin",
       }),
     }
   );
