@@ -312,7 +312,7 @@ app.get("/tiktok/auth", (req, res) => {
 
 app.get("/x/auth", async (req, res) => {
   const userId = req.query.userId;
-  const authUrl = authClient.generateAuthURL({
+  const authUrl = Twitter.authClient.generateAuthURL({
     state: userId,
     code_challenge_method: "s256",
   });
