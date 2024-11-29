@@ -275,8 +275,9 @@ app.get("/cb/x", async (req, res) => {
       "user.fields": ["username"],
     });
     console.log("profileData:", response.data);
+    console.log("Username:", response.data.username);
     const userInfo = await getTwitterUserInfo(
-      response.data.data.username,
+      response.data.username,
       bearerToken
     );
     console.log("userInfo:", userInfo);
