@@ -27,9 +27,9 @@ export const OAuthCallback = async (req, res) => {
   // const bearerToken =
   //   "AAAAAAAAAAAAAAAAAAAAAATJxAEAAAAAY3yg8dUg8MK%2BOmmlDGWG1SdCAqc%3DChdHSn0hhcgnUg8LeEQf5ck4ty2xTBYKmixye6BdfcIK9mSBkY";
   try {
-    const bearerToken = await Twitter.authClient.requestAccessToken(code);
+    const bearerToken = await authClient.requestAccessToken(code);
     console.log("Token:", bearerToken);
-    const pageData = await Twitter.getUserInfo();
+    const pageData = await getUserInfo();
     console.log("pageData:", pageData);
     const formData = await getCachedData(userId);
     console.log("formData:", formData);

@@ -116,7 +116,7 @@ export default function AccountSettingsModal({
     });
 
     if (formData.platform === "instagram") {
-      window.location.href = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1617513219147291&redirect_uri=https://the-reach-market-api.vercel.app/cb/instagram&state=${user.id}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish`;
+      window.location.href = `https://the-reach-market-api.vercel.app/instagram/auth?userId=${user.id}`;
     }
 
     if (formData.platform === "youtube") {
