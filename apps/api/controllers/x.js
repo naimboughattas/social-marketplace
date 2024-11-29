@@ -1,24 +1,3 @@
-const crypto = require("crypto");
-
-export function oauthSignature(
-  method,
-  url,
-  parameters,
-  consumerSecret,
-  tokenSecret = ""
-) {
-  const encodedParameters = Object.keys(parameters)
-    .sort()
-    .map((key) => `${key}=${encodeURIComponent(parameters[key])}`)
-    .join("&");
-  const baseString = `${method}&${encodeURIComponent(url)}&${encodeURIComponent(encodedParameters)}`;
-  const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(tokenSecret)}`;
-  return crypto
-    .createHmac("sha1", signingKey)
-    .update(baseString)
-    .digest("base64");
-}
-
 // Récupération du Bearer Token
 export const getBearerToken = async (consumerKey, consumerSecret) => {
   const credentials = btoa(`${consumerKey}:${consumerSecret}`); // Encodage en Base64
