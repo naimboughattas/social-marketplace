@@ -65,7 +65,7 @@ const PORT = 8000;
 app.use(cookieParser());
 app.use(cors());
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 
 app.get("/", async (req, res) => {
   res.send("Hello World");
