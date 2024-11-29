@@ -40,11 +40,8 @@ export const getTwitterUserInfo = async (username, bearerToken) => {
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${bearerToken}` },
     });
-
-    if (!response.ok)
-      throw new Error("Erreur lors de la récupération des données utilisateur");
-
     const data = await response.json();
+    console.log("getTwitterUserInfo: ", data);
     const user = data.data;
 
     return user;
