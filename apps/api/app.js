@@ -35,6 +35,8 @@ import {
   getUserChannels,
 } from "./controllers/youtube";
 import { getTwitterData, getTwitterUserInfo } from "./controllers/x";
+import session from "express-session";
+const querystring = require('querystring');
 
 const testToken =
   "IGQWRPcnNLeVl0RTRvbWl6SFhadXdXbmJ2THNzdVFqdkp1M0NzOEJfRGVJSE5jNFNLNlpkN0E5dFhUZAFlFRFlYMS1ESUUzNjV4ZADdRWlRFcGJjdUt6M3dBSXIybWhHdk11VUJCUmc1cWhjVFR5WVJDQ05meHdhWmMZD";
@@ -62,6 +64,14 @@ const db = getFirestore(firestoreApp);
 const app = express();
 const PORT = 8000;
 
+// Configuration de la session
+app.use(
+  session({
+    secret: "votre_secret",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 app.use(cookieParser());
 app.use(cors());
 app.use(passport.initialize());
@@ -316,7 +326,52 @@ app.get("/tiktok/auth", (req, res) => {
   res.redirect(url);
 });
 
-app.get("/x/auth", passport.authenticate("twitter"));
+app.get("/x/auth", async (req, res) => {
+  const oauth_callback = "https://the-reach-market-api.vercel.app/cb/x";
+  const url = "https://api.twitter.com/oauth/request_token";
+  const method = "POST";
+  const parameters = {
+    oauth_consumer_key: "bjF0anFlY1RIc2VpZDdvRTBRdjU6MTpjaQ",
+    oauth_nonce: Date.now(),
+    oauth_signature_method: "HMAC-SHA1",
+    oauth_timestamp: Math.floor(Date.now() / 1000),
+    oauth_version: "1.0",
+    oauth_callback,
+  };
+
+  // Créer la signature OAuth
+  const oauth_signature = oauthSignature(
+    method,
+    url,
+    parameters,
+    "AF2Gru6sDAOlcJE0NTrwzvQ6W5Hr4ZyEUAKPQ1Bz24vXz-QgWr"
+  );
+  parameters.oauth_signature = oauth_signature;
+
+  // Envoyer la requête à Twitter pour obtenir le "Request Token"
+  const headers = {
+    Authorization: `OAuth ${Object.keys(parameters)
+      .map((key) => `${key}="${encodeURIComponent(parameters[key])}"`)
+      .join(", ")}`,
+  };
+
+  const response = await fetch(url, {
+    method,
+    headers,
+  });
+
+  const responseText = await response.text();
+  const data = querystring.parse(responseText);
+
+  // Sauvegarder le "Request Token" et "Request Token Secret" dans la session
+  req.session.oauth_token = data.oauth_token;
+  req.session.oauth_token_secret = data.oauth_token_secret;
+
+  // Rediriger l'utilisateur vers Twitter pour l'autorisation
+  res.redirect(
+    `https://api.twitter.com/oauth/authorize?oauth_token=${data.oauth_token}`
+  );
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);

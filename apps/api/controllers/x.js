@@ -1,36 +1,23 @@
-const passport = require("passport");
-const TwitterStrategy = require("passport-twitter").Strategy;
+const crypto = require("crypto");
 
-// Votre API keys de Twitter
-const TWITTER_CONSUMER_KEY = "bjF0anFlY1RIc2VpZDdvRTBRdjU6MTpjaQ";
-const TWITTER_CONSUMER_SECRET =
-  "AF2Gru6sDAOlcJE0NTrwzvQ6W5Hr4ZyEUAKPQ1Bz24vXz-QgWr";
-const TWITTER_CALLBACK_URL = "https://the-reach-market-api.vercel.app/cb/x"; // Remplacez par votre URL de redirection
-
-// Configurez la stratégie de Passport pour Twitter
-passport.use(
-  new TwitterStrategy(
-    {
-      consumerKey: TWITTER_CONSUMER_KEY,
-      consumerSecret: TWITTER_CONSUMER_SECRET,
-      callbackURL: TWITTER_CALLBACK_URL,
-    },
-    (token, tokenSecret, profile, done) => {
-      // Vous pouvez ici sauvegarder l'utilisateur dans la base de données
-      // ou le renvoyer directement
-      return done(null, { profile, token, tokenSecret });
-    }
-  )
-);
-
-// Sérialisation et désérialisation de l'utilisateur
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
+export function oauthSignature(
+  method,
+  url,
+  parameters,
+  consumerSecret,
+  tokenSecret = ""
+) {
+  const encodedParameters = Object.keys(parameters)
+    .sort()
+    .map((key) => `${key}=${encodeURIComponent(parameters[key])}`)
+    .join("&");
+  const baseString = `${method}&${encodeURIComponent(url)}&${encodeURIComponent(encodedParameters)}`;
+  const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(tokenSecret)}`;
+  return crypto
+    .createHmac("sha1", signingKey)
+    .update(baseString)
+    .digest("base64");
+}
 
 // Récupération du Bearer Token
 export const getBearerToken = async (consumerKey, consumerSecret) => {
