@@ -270,7 +270,7 @@ app.get("/cb/x", async (req, res) => {
   //   "AAAAAAAAAAAAAAAAAAAAAATJxAEAAAAAY3yg8dUg8MK%2BOmmlDGWG1SdCAqc%3DChdHSn0hhcgnUg8LeEQf5ck4ty2xTBYKmixye6BdfcIK9mSBkY";
   try {
     const bearerToken = await authClient.requestAccessToken(code);
-    console.log("Token:", token);
+    console.log("Token:", bearerToken);
     // const response = await client.users.findMyUser({
     //   "user.fields": ["name", "profile_image_url", "public_metrics"],
     // });
