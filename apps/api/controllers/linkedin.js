@@ -20,7 +20,7 @@ export const OAuthCallback = async (req, res) => {
   });
 };
 
-export const getAccessToken = async () => {
+export const getAccessToken = async (code) => {
   const response = await fetch(
     "https://www.linkedin.com/oauth/v2/accessToken",
     {
@@ -29,9 +29,10 @@ export const getAccessToken = async () => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        grant_type: "authorization_code",
+        grant_type: "client_credentials",
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
+        
       }),
     }
   );
