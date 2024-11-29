@@ -274,8 +274,13 @@ app.get("/cb/x", async (req, res) => {
     const response = await client.users.findMyUser({
       "user.fields": ["username"],
     });
-    console.log("User:", response);
-    // const data = await getTwitterUserInfo("elonmusk", bearerToken);
+    const profileData = response.json();
+    console.log("profileData:", profileData);
+    const userInfo = await getTwitterUserInfo(
+      profileData.data.username,
+      bearerToken
+    );
+    console.log("userInfo:", userInfo);
     // const formData = await getCachedData(userId);
     // console.log("formData:", formData);
     // const accountRef = await addDoc(collection(db, "socialAccounts"), {
