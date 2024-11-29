@@ -33,8 +33,7 @@ import {
   getAccessToken as getYoutubeAccessToken,
   getUserChannels,
 } from "./controllers/youtube";
-import { getTwitterUserInfo } from "./controllers/x";
-import { Client, auth } from "twitter-api-sdk";
+import * as Twitter from "./controllers/x";
 
 const jsonParser = bodyParser.json();
 admin.initializeApp({
@@ -58,14 +57,6 @@ const firestoreApp = initializeApp({
 const db = getFirestore(firestoreApp);
 const app = express();
 const PORT = 8000;
-
-const authClient = new auth.OAuth2User({
-  client_id: "bjF0anFlY1RIc2VpZDdvRTBRdjU6MTpjaQ",
-  client_secret: "AF2Gru6sDAOlcJE0NTrwzvQ6W5Hr4ZyEUAKPQ1Bz24vXz-QgWr",
-  callback: `https://the-reach-market-api.vercel.app/cb/x`,
-  scopes: ["tweet.read", "users.read"],
-});
-const client = new Client(authClient);
 
 app.use(cookieParser());
 app.use(cors());
@@ -269,52 +260,21 @@ app.get("/cb/x", async (req, res) => {
   // const bearerToken =
   //   "AAAAAAAAAAAAAAAAAAAAAATJxAEAAAAAY3yg8dUg8MK%2BOmmlDGWG1SdCAqc%3DChdHSn0hhcgnUg8LeEQf5ck4ty2xTBYKmixye6BdfcIK9mSBkY";
   try {
-    const bearerToken = await authClient.requestAccessToken(code);
+    const bearerToken = await Twitter.authClient.requestAccessToken(code);
     console.log("Token:", bearerToken);
-    const response = await client.users.findMyUser({
-      "user.fields": [
-        "affiliation",
-        "connection_status",
-        "created_at",
-        "description",
-        "entities",
-        "id",
-        "location",
-        "most_recent_tweet_id",
-        "name",
-        "pinned_tweet_id",
-        "profile_banner_url",
-        "profile_image_url",
-        "protected",
-        "public_metrics",
-        "receives_your_dm",
-        "subscription_type",
-        "url",
-        "username",
-        "verified",
-        "verified_type",
-        "withheld",
-      ],
+    const pageData = await Twitter.getUserInfo();
+    console.log("pageData:", pageData);
+    const formData = await getCachedData(userId);
+    console.log("formData:", formData);
+    const accountRef = await addDoc(collection(db, "socialAccounts"), {
+      userId,
+      ...formData,
+      ...pageData,
+      createdAt: Timestamp.now(),
     });
-    console.log("profileData:", response.data);
-    // console.log("Username:", response.data.username);
-    // const userInfo = await getTwitterUserInfo(
-    //   response.data.username,
-    //   bearerToken
-    // );
-    // console.log("userInfo:", userInfo);
-    // const formData = await getCachedData(userId);
-    // console.log("formData:", formData);
-    // const accountRef = await addDoc(collection(db, "socialAccounts"), {
-    //   userId,
-    //   ...formData,
-    //   ...pageData,
-    //   createdAt: Timestamp.now(),
-    // });
-    // res.redirect(
-    //   "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
-    // );
-    res.send(response);
+    res.redirect(
+      "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
+    );
   } catch (error) {
     console.error("Error while retrieving access token from Twitter:", error);
     res.status(500).json({
@@ -357,8 +317,6 @@ app.get("/x/auth", async (req, res) => {
     code_challenge_method: "s256",
   });
   res.redirect(authUrl);
-  // const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=bjF0anFlY1RIc2VpZDdvRTBRdjU6MTpjaQ&redirect_uri=https://the-reach-market-api.vercel.app/cb/x&scope=tweet.read%20users.read%20offline.access&state=${userId}&code_challenge=challenge&code_challenge_method=plain`;
-  // res.redirect(twitterAuthUrl);
 });
 
 app.listen(PORT, () => {
