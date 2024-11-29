@@ -52,6 +52,11 @@ app.get("/cb/linkedin", (req, res) => {
   res.send("OK");
 });
 
+app.get("/cb/facebook", (req, res) => {
+  console.log("LinkedIn callback:", req.query);
+  res.send("OK");
+});
+
 app.get("/instagram/auth", Instagram.generateAuthURL);
 
 app.get("/youtube/auth", Youtube.generateAuthURL);
@@ -61,6 +66,14 @@ app.get("/tiktok/auth", Tiktok.generateAuthURL);
 app.get("/x/auth", Twitter.generateAuthURL);
 
 app.get("/linkedin/auth", (req, res) => {
+  const CLIENT_ID = "780d3m61bi94hx";
+  const REDIRECT_URI = "https://the-reach-market-api.vercel.app/cb/linkedin";
+  res.redirect(
+    `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${req.query.userId}&scope=r_liteprofile,r_basicprofile`
+  );
+});
+
+app.get("/facebook/auth", (req, res) => {
   const CLIENT_ID = "780d3m61bi94hx";
   const REDIRECT_URI = "https://the-reach-market-api.vercel.app/cb/linkedin";
   res.redirect(
