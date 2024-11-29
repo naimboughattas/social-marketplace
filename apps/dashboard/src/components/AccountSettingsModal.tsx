@@ -120,20 +120,15 @@ export default function AccountSettingsModal({
     }
 
     if (formData.platform === "youtube") {
-      const response = await fetch(
-        `https://the-reach-market-api.vercel.app/youtube/auth/url?userId=${user.id}`
-      );
-      const { url } = await response.json();
-      window.location.href = url;
+      window.location.href = `https://the-reach-market-api.vercel.app/youtube/auth?userId=${user.id}`;
     }
 
     if (formData.platform === "tiktok") {
-      // const response = await fetch(
-      //   `https://the-reach-market-api.vercel.app/tiktok/auth/url`
-      // );
-      // const { url } = await response.json();
-      window.location.href = `https://the-reach-market-api.vercel.app/tiktok/auth/url?userId=${user.id}`;
-      // window.location.href = `http://localhost:8000/tiktok/auth/url?userId=${user.id}`;
+      window.location.href = `https://the-reach-market-api.vercel.app/tiktok/auth?userId=${user.id}`;
+    }
+
+    if (formData.platform === "x") {
+      window.location.href = `https://the-reach-market-api.vercel.app/x/auth?userId=${user.id}`;
     }
   };
 

@@ -1,9 +1,10 @@
 const http = require("http");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const CLIENT_KEY = "your_client_key";
 const bodyParser = require("body-parser");
 const express = require("express");
+const passport = require("passport");
+const session = require("express-session");
 const admin = require("firebase-admin");
 const { initializeApp } = require("firebase/app");
 const {
@@ -33,6 +34,7 @@ import {
   getAccessToken as getYoutubeAccessToken,
   getUserChannels,
 } from "./controllers/youtube";
+import { getTwitterData, getTwitterUserInfo } from "./controllers/x";
 
 const testToken =
   "IGQWRPcnNLeVl0RTRvbWl6SFhadXdXbmJ2THNzdVFqdkp1M0NzOEJfRGVJSE5jNFNLNlpkN0E5dFhUZAFlFRFlYMS1ESUUzNjV4ZADdRWlRFcGJjdUt6M3dBSXIybWhHdk11VUJCUmc1cWhjVFR5WVJDQ05meHdhWmMZD";
@@ -60,8 +62,19 @@ const db = getFirestore(firestoreApp);
 const app = express();
 const PORT = 8000;
 
+// Configuration des sessions
+app.use(
+  session({
+    secret: "votreSecret",
+    resave: false,
+    saveUninitialized: true,
+    store: new (require("session-file-store")(session))(),
+  })
+);
 app.use(cookieParser());
 app.use(cors());
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get("/", async (req, res) => {
   res.send("Hello World");
@@ -211,7 +224,7 @@ app.get("/cb/tiktok", async (req, res) => {
 
     // Étape 2 : Utiliser le access_token pour récupérer les informations du profil TikTok
     const userInfoResponse = await fetch(
-      `https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,username,follower_count,following_count,likes_count,video_count`,
+      `https://open.tiktokapis.com/v2/user/info/?fields=is_verified,open_id,union_id,avatar_url,username,follower_count,following_count,likes_count,video_count`,
       {
         method: "GET",
         headers: {
@@ -255,15 +268,46 @@ app.get("/cb/tiktok", async (req, res) => {
   }
 });
 
-app.get("/youtube/auth/url", async (req, res) => {
+app.get(
+  "/cb/x",
+  passport.authenticate("twitter", { failureRedirect: "/" }),
+  async (req, res) => {
+    const userId = req.query.userId;
+    const bearerToken =
+      "AAAAAAAAAAAAAAAAAAAAAATJxAEAAAAAY3yg8dUg8MK%2BOmmlDGWG1SdCAqc%3DChdHSn0hhcgnUg8LeEQf5ck4ty2xTBYKmixye6BdfcIK9mSBkY";
+    try {
+      const data = await getTwitterUserInfo("elonmusk", bearerToken);
+      const formData = await getCachedData(userId);
+      console.log("formData:", formData);
+      const accountRef = await addDoc(collection(db, "socialAccounts"), {
+        userId,
+        ...formData,
+        ...pageData,
+        createdAt: Timestamp.now(),
+      });
+      res.redirect(
+        "https://the-reach-market-dashboard.vercel.app/dashboard/my-accounts"
+      );
+      res.json(data);
+    } catch (error) {
+      console.error("Error while retrieving access token from Twitter:", error);
+      res.status(500).json({
+        error: "Failed to obtain access token",
+        details: error.message,
+      });
+    }
+  }
+);
+
+app.get("/youtube/auth", async (req, res) => {
   const userId = req.query.userId;
   // Exemple d'utilisation
   const url = await getAuthUrl(userId); // Affiche l'URL d'autorisation
 
-  res.json({ url });
+  res.redirect(url);
 });
 
-app.get("/tiktok/auth/url", (req, res) => {
+app.get("/tiktok/auth", (req, res) => {
   console.log(req.query.userId);
   const CLIENT_KEY = "sbaw0c0ngctkgyhbr1";
   const csrfState = Math.random().toString(36).substring(2);
@@ -280,6 +324,8 @@ app.get("/tiktok/auth/url", (req, res) => {
 
   res.redirect(url);
 });
+
+app.get("/x/auth", passport.authenticate("twitter"));
 
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
