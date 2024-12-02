@@ -2,6 +2,7 @@ const admin = require("firebase-admin");
 const { initializeApp } = require("firebase/app");
 const {
   getFirestore,
+  connectFirestoreEmulator,
   collection,
   query,
   where,
@@ -19,7 +20,7 @@ export const adminFirebaseApp = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-export const firebaseApp = initializeApp({
+initializeApp({
   apiKey: process.env.VITE_FIREBASE_API_KEY,
   authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.VITE_FIREBASE_PROJECT_ID,
@@ -31,4 +32,7 @@ export const firebaseApp = initializeApp({
 });
 
 // Obtention de la référence à la base de données
-export const db = getFirestore(firebaseApp);
+export const db = getFirestore();
+if (process.env.NODE_ENV === "development") {
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+}

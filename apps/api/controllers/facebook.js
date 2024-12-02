@@ -4,7 +4,7 @@ const { getCachedData } = require("../redis");
 
 const CLIENT_ID = "587515137267947";
 const CLIENT_SECRET = "3d065405e44b5763266ee21de24d8f1c";
-const REDIRECT_URI = "https://the-reach-market-api.vercel.app/cb/facebook";
+const REDIRECT_URI = `${process.env.NODE_ENV === "development" ? "https://usable-fowl-engaged.ngrok-free.app" : "https://the-reach-market-api.vercel.app"}/cb/facebook`;
 
 export const generateAuthURL = (req, res) => {
   res.redirect(

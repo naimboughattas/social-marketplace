@@ -104,7 +104,7 @@ export default function AccountSettingsModal({
     };
     console.log(user);
     if (!user) return;
-    await fetch("https://the-reach-market-api.vercel.app/cache/set", {
+    await fetch("https://usable-fowl-engaged.ngrok-free.app/cache/set", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -116,27 +116,27 @@ export default function AccountSettingsModal({
     });
 
     if (formData.platform === "instagram") {
-      window.location.href = `https://the-reach-market-api.vercel.app/instagram/auth?userId=${user.id}`;
+      window.location.href = `https://usable-fowl-engaged.ngrok-free.app/instagram/auth?userId=${user.id}`;
     }
 
     if (formData.platform === "youtube") {
-      window.location.href = `https://the-reach-market-api.vercel.app/youtube/auth?userId=${user.id}`;
+      window.location.href = `https://usable-fowl-engaged.ngrok-free.app/youtube/auth?userId=${user.id}`;
     }
 
     if (formData.platform === "tiktok") {
-      window.location.href = `https://the-reach-market-api.vercel.app/tiktok/auth?userId=${user.id}`;
+      window.location.href = `https://usable-fowl-engaged.ngrok-free.app/tiktok/auth?userId=${user.id}`;
     }
 
     if (formData.platform === "x") {
-      window.location.href = `https://the-reach-market-api.vercel.app/x/auth?userId=${user.id}`;
+      window.location.href = `https://usable-fowl-engaged.ngrok-free.app/x/auth?userId=${user.id}`;
     }
 
     if (formData.platform === "linkedin") {
-      window.location.href = `https://the-reach-market-api.vercel.app/linkedin/auth?userId=${user.id}`;
+      window.location.href = `https://usable-fowl-engaged.ngrok-free.app/linkedin/auth?userId=${user.id}`;
     }
 
     if (formData.platform === "facebook") {
-      window.location.href = `https://the-reach-market-api.vercel.app/facebook/auth?userId=${user.id}`;
+      window.location.href = `https://usable-fowl-engaged.ngrok-free.app/facebook/auth?userId=${user.id}`;
     }
   };
 

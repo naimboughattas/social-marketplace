@@ -32,21 +32,54 @@ app.post("/cache/set", jsonParser, async (req, res) => {
   res.send("OK");
 });
 
-app.get("/webhook/instagram", (req, res) => {
-  console.log("Webhook received:", req.body);
-  const db = admin.database();
-  const ref = db.ref("posts");
-  ref.push({
-    content: "New post content",
-    timestamp: Date.now(),
-  });
-  res.status(200).send("OK");
-});
+// app.get("/webhook/instagram", (req, res) => {
+//   console.log("Webhook received:", req.body);
+//   const db = admin.database();
+//   const ref = db.ref("posts");
+//   ref.push({
+//     content: "New post content",
+//     timestamp: Date.now(),
+//   });
+//   res.status(200).send("OK");
+// });
 
-app.get("/webhook/facebook", jsonParser, (req, res) => {
+// app.get("/webhook/instagram", jsonParser, (req, res) => {
+//   const mode = req.query["hub.mode"];
+//   const token = req.query["hub.verify_token"];
+//   const challenge = req.query["hub.challenge"];
+//   // console.log("Changements détectés :", req);
+
+//   if (mode === "subscribe" && token === VERIFY_TOKEN) {
+//     console.log("Webhook vérifié avec succès.");
+//     res.status(200).send(challenge);
+//   } else {
+//     console.error("Échec de la vérification du Webhook.");
+//     res.sendStatus(403);
+//   }
+// });
+
+// // Réception des événements Webhook
+// app.post("/webhook/instagram", jsonParser, (req, res) => {
+//   const body = req.body;
+
+//   if (body.object === "instagram") {
+//     body.entry.forEach((entry) => {
+//       const changes = entry.changes;
+//       console.log("Changements détectés :", changes);
+
+//       // Traiter les changements ici (par ex. posts, amis, vidéos, etc.)
+//     });
+//     res.sendStatus(200); // Confirmer la réception
+//   } else {
+//     res.sendStatus(404);
+//   }
+// });
+
+app.get("/webhook/facebook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
+  console.log("Changements détectés :", req);
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("Webhook vérifié avec succès.");
