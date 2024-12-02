@@ -60,6 +60,7 @@ app.get("/webhook/facebook", jsonParser, (req, res) => {
 // Réception des événements Webhook
 app.post("/webhook/facebook", jsonParser, (req, res) => {
   const body = req.body;
+  console.log("Changements détectés :", body);
 
   if (body.object === "user") {
     body.entry.forEach((entry) => {
