@@ -13,6 +13,8 @@ import * as Tiktok from "./controllers/tiktok";
 import * as Linkedin from "./controllers/linkedin";
 import * as Facebook from "./controllers/facebook";
 
+const VERIFY_TOKEN = "ceci_est_un_test";
+
 const jsonParser = bodyParser.json();
 const app = express();
 const PORT = 8000;
@@ -39,6 +41,37 @@ app.get("/webhook/instagram", (req, res) => {
     timestamp: Date.now(),
   });
   res.status(200).send("OK");
+});
+
+app.get("/webhook/facebook", jsonParser, (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+    console.log("Webhook vérifié avec succès.");
+    res.status(200).send(challenge);
+  } else {
+    console.error("Échec de la vérification du Webhook.");
+    res.sendStatus(403);
+  }
+});
+
+// Réception des événements Webhook
+app.post("/webhook/facebook", jsonParser, (req, res) => {
+  const body = req.body;
+
+  if (body.object === "user") {
+    body.entry.forEach((entry) => {
+      const changes = entry.changes;
+      console.log("Changements détectés :", changes);
+
+      // Traiter les changements ici (par ex. posts, amis, vidéos, etc.)
+    });
+    res.sendStatus(200); // Confirmer la réception
+  } else {
+    res.sendStatus(404);
+  }
 });
 
 app.get("/cb/instagram", Instagram.OAuthCallback);
