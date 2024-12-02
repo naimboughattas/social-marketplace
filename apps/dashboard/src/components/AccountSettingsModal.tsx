@@ -104,7 +104,7 @@ export default function AccountSettingsModal({
     };
     console.log(user);
     if (!user) return;
-    await fetch("${process.env.NEXT_PUBLIC_API_URL}/cache/set", {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cache/set`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
