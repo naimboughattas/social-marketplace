@@ -81,6 +81,7 @@ function PrivateRoute({ children, requireAdmin = false }: PrivateRouteProps) {
 }
 
 export default function App() {
+  console.log(import.meta.env.VITE_NEXT_PUBLIC_API_URL)
   useEffect(() => {
     const postsRef = ref(database, "posts/");
 
