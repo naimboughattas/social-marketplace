@@ -11,6 +11,7 @@ import * as Youtube from "./controllers/youtube";
 import * as Twitter from "./controllers/x";
 import * as Tiktok from "./controllers/tiktok";
 import * as Linkedin from "./controllers/linkedin";
+import * as Facebook from "./controllers/facebook";
 
 const jsonParser = bodyParser.json();
 const app = express();
@@ -50,10 +51,7 @@ app.get("/cb/x", Twitter.OAuthCallback);
 
 app.get("/cb/linkedin", Linkedin.OAuthCallback);
 
-app.get("/cb/facebook", (req, res) => {
-  console.log("LinkedIn callback:", req.query);
-  res.send("OK");
-});
+app.get("/cb/facebook", Facebook.OAuthCallback);
 
 app.get("/instagram/auth", Instagram.generateAuthURL);
 
@@ -65,13 +63,7 @@ app.get("/x/auth", Twitter.generateAuthURL);
 
 app.get("/linkedin/auth", Linkedin.generateAuthURL);
 
-app.get("/facebook/auth", (req, res) => {
-  const CLIENT_ID = "780d3m61bi94hx";
-  const REDIRECT_URI = "https://the-reach-market-api.vercel.app/cb/linkedin";
-  res.redirect(
-    `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=foobar&scope=liteprofile%20emailaddress%20w_member_social`
-  );
-});
+app.get("/facebook/auth", Facebook.generateAuthURL);
 
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);

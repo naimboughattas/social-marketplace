@@ -67,8 +67,8 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
     case "linkedin":
       return {
         username: data.username,
-        profile_picture_url: data.profile_picture_url,
-        followers: data.followers_count,
+        profile_picture_url: data.picture,
+        followers: data.followers,
         category: data.category,
         country: data.country,
         city: data.city,
