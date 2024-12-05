@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 const admin = require("firebase-admin");
 const { initializeApp } = require("firebase/app");
 const {
@@ -12,7 +13,9 @@ const {
   Timestamp,
 } = require("firebase/firestore");
 const { getDatabase } = require("firebase/database");
-const serviceAccount = require("./firebase-credentials.json");
+const serviceAccount = require("../firebase-credentials.json");
+
+dotenv.config();
 
 export const adminFirebaseApp = admin.initializeApp({
   databaseURL:

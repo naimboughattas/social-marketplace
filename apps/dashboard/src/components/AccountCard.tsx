@@ -16,6 +16,7 @@ import {
   Service,
 } from "../lib/types";
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { useAccount } from "../hooks/useAccounts";
 
 const formatAccountDataByPlatform = (platform: Platform, data: any) => {
   switch (platform) {
@@ -40,7 +41,7 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
     case "youtube":
       return {
         username: data.title,
-        profile_picture_url: data.thumbnails.high.url,
+        profile_picture_url: data.thumbnails.default.url,
         followers: data.followers,
         category: data.category,
         country: data.country,
@@ -79,17 +80,19 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
 };
 
 interface AccountCardProps {
-  account: SocialAccount;
+  accountId: string;
   onUpdate: (updates: Partial<SocialAccount>) => void;
   onDelete: () => void;
 }
 
 export default function AccountCard({
-  account,
+  accountId,
   onUpdate,
   onDelete,
 }: AccountCardProps) {
-  const accountData = formatAccountDataByPlatform(account.platform, account);
+  const { account, loading: isFetching, error } = useAccount(accountId);
+  const accountData =
+    !isFetching && formatAccountDataByPlatform(account.platform, account);
   const { addNotification } = useNotifications();
   const [isEditingLocation, setIsEditingLocation] = useState(false);
   const [showPriceSuggestions, setShowPriceSuggestions] = useState(false);
@@ -150,6 +153,8 @@ export default function AccountCard({
       });
     }
   };
+  // return <div>Loading...</div>;
+  if (isFetching) return <div>Loading...</div>;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border overflow-hidden">

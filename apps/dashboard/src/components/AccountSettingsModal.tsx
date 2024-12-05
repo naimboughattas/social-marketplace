@@ -98,10 +98,6 @@ export default function AccountSettingsModal({
     //   return;
     // }
 
-    const newAccount = {
-      ...formData,
-      id: account?.id || crypto.randomUUID(),
-    };
     console.log(user);
     if (!user) return;
     await fetch(`${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/cache/set`, {
@@ -111,7 +107,7 @@ export default function AccountSettingsModal({
       },
       body: JSON.stringify({
         key: user.id,
-        value: newAccount,
+        value: formData,
       }),
     });
 

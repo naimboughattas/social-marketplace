@@ -43,7 +43,6 @@ export default function MyAccounts() {
     language: "",
     country: "",
   });
-  console.log(localStorage.getItem("socialAccount"));
 
   const filteredAccounts = accounts.filter((account) => {
     // Filter by tab
@@ -168,7 +167,7 @@ export default function MyAccounts() {
             {filteredAccounts.map((account) => (
               <AccountCard
                 key={account.id}
-                account={account}
+                accountId={account.id}
                 onUpdate={(updates) => handleUpdateAccount(account.id, updates)}
                 onDelete={() => handleDeleteAccount(account.id)}
                 onStartVerification={() => handleStartVerification(account.id)}

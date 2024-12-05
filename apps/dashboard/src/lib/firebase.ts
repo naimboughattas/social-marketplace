@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
 import { getDatabase } from "firebase/database";
@@ -25,3 +25,7 @@ export const functions = getFunctions(app);
 export const database = getDatabase(app);
 
 export default app;
+
+if (import.meta.env.VITE_NODE_ENV === "development") {
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+}
