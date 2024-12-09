@@ -24,26 +24,11 @@ import tiktokRoutes from "./routes/oauth/tiktok";
 import xRoutes from "./routes/oauth/x";
 import youtubeRoutes from "./routes/oauth/youtube";
 
-const whitelist = [
-  "http://localhost:5173",
-  "https://the-reach-market-api.vercel.app",
-];
 const jsonParser = bodyParser.json();
 const app = express();
 const PORT = 8000;
 
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (origin && whitelist.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-  })
-);
 
 app.use(cors());
 
