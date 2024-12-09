@@ -12,7 +12,7 @@ import * as Subscriptions from "../controllers/ressources/subscriptions";
 import * as Orders from "../controllers/ressources/orders";
 import * as Notifications from "../controllers/ressources/notifications";
 import { checkCache } from "../middleware";
-import { deleteCachedData } from "../lib/redis";
+import { client, deleteCachedData } from "../lib/redis";
 
 const router: Router = Router();
 
@@ -30,7 +30,9 @@ const createRoutes = (entityName: string, controller: any) => {
 
   router.get(`/${entityName}/:id`, checkCache, async (req, res) => {
     try {
+      await client.connect();
       const data = await controller.getById(req.params.id);
+      await client.disconnect();
       res.json(data);
     } catch (error) {
       console.error(`Error fetching ${entityName}:`, error);

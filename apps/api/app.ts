@@ -52,8 +52,9 @@ app.get("/", async (_req, res) => {
 });
 
 app.post("/cache/set", jsonParser, async (req, res) => {
-  console.log("Setting cache:", req.body.key, req.body.value);
+  await client.connect();
   await setCachedData(req.body.key, req.body.value);
+  await client.disconnect();
   res.send("OK");
 });
 
@@ -76,6 +77,5 @@ app.use("/", xRoutes);
 app.use("/", youtubeRoutes);
 
 app.listen(PORT, () => {
-  client.connect();
   console.log(`✅ Server is running on port ${PORT}`);
 });
