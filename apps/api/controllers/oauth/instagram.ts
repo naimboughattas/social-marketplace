@@ -24,6 +24,7 @@ export const OAuthCallback = async (req: Request, res: Response) => {
   const userId = req.query.state as string;
 
   try {
+    console.log(`${process.env.OAUTH_REDIRECT_BASE_URI}/cb/instagram`);
     const { access_token, expires_in } = await getAccessToken(code);
     const formData = await getCachedData(userId);
     await deleteCachedData(userId);

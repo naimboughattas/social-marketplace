@@ -27,6 +27,7 @@ export const getInstagramAccessToken = async (
     `${process.env.OAUTH_REDIRECT_BASE_URI}/cb/instagram`
   );
   formData.append("code", code);
+  console.log(`${process.env.OAUTH_REDIRECT_BASE_URI}/cb/instagram`);
 
   const response = await fetch(url, {
     method: "POST",
