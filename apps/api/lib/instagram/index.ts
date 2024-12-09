@@ -15,6 +15,7 @@ export const getInstagramAccessToken = async (
 ): Promise<InstagramAccessTokenResponse> => {
   const url = "https://api.instagram.com/oauth/access_token";
   const formData = new URLSearchParams();
+  const REDIRECT_URI = `${process.env.OAUTH_REDIRECT_BASE_URI}/cb/instagram`;
 
   formData.append("client_id", process.env.INSTAGRAM_CLIENT_ID as string);
   formData.append(
@@ -22,12 +23,9 @@ export const getInstagramAccessToken = async (
     process.env.INSTAGRAM_CLIENT_SECRET as string
   );
   formData.append("grant_type", "authorization_code");
-  formData.append(
-    "redirect_uri",
-    `${process.env.OAUTH_REDIRECT_BASE_URI}/cb/instagram`
-  );
+  formData.append("redirect_uri", REDIRECT_URI);
   formData.append("code", code);
-  console.log(`${process.env.OAUTH_REDIRECT_BASE_URI}/cb/instagram`);
+  console.log(formData);
 
   const response = await fetch(url, {
     method: "POST",
