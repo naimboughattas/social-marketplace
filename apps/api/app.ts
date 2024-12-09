@@ -28,8 +28,9 @@ const jsonParser = bodyParser.json();
 const app = express();
 const PORT = 8000;
 
-app.use(cookieParser());
+client.connect();
 
+app.use(cookieParser());
 app.use(cors());
 
 app.get("/", async (_req, res) => {
@@ -37,9 +38,7 @@ app.get("/", async (_req, res) => {
 });
 
 app.post("/cache/set", jsonParser, async (req, res) => {
-  await client.connect();
   await setCachedData(req.body.key, req.body.value);
-  await client.disconnect();
   res.send("OK");
 });
 
@@ -64,3 +63,11 @@ app.use("/", youtubeRoutes);
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
 });
+
+const shutdown = () => {
+  console.log("Shutting down server...");
+  client.disconnect();
+};
+
+process.on("SIGINT", shutdown); // Quand on appuie sur Ctrl+C
+process.on("SIGTERM", shutdown);

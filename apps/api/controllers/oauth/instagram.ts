@@ -4,6 +4,7 @@ import { deleteCachedData, getCachedData } from "../../lib/redis";
 import { InstagramAccount } from "./types";
 import { createDocument } from "../firebase";
 import {
+  exchangeInstagramAccessToken,
   getInstagramAccessToken,
   getInstagramUserMedia,
   getInstagramUserProfile,
@@ -45,7 +46,7 @@ export const OAuthCallback = async (req: Request, res: Response) => {
 
 export const getAccessToken = async (code: string) => {
   const response = await getInstagramAccessToken(code);
-  const data = await refreshInstagramAccessToken(response.access_token);
+  const data = await exchangeInstagramAccessToken(response.access_token);
   return data;
 };
 

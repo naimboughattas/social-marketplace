@@ -39,9 +39,7 @@ export const isInstagramAccessTokenResponse = (
     "access_token" in data &&
     typeof (data as any).access_token === "string" &&
     "user_id" in data &&
-    typeof (data as any).user_id === "string" &&
-    "expires_in" in data &&
-    typeof (data as any).expires_in === "number"
+    typeof (data as any).user_id === "number" 
   );
 };
 

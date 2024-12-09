@@ -28,25 +28,39 @@ export const getInstagramAccessToken = async (
   );
   formData.append("code", code);
 
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formData,
+  });
+
+  // Récupérer la réponse en JSON
+  const tokenData: unknown = await response.json();
+
+  // Vérification de la structure des données avec un type guard
+  if (isInstagramAccessTokenResponse(tokenData)) {
+    return tokenData;
+  } else {
+    console.log("Instagram Access Token:", tokenData);
+    throw new Error("Invalid Instagram access token response");
+  }
+};
+
+export const exchangeInstagramAccessToken = async (
+  token: string
+): Promise<InstagramAccessTokenResponse> => {
+  const url = `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&access_token=${token}`;
+
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: formData,
-    });
+    const response = await fetch(url, { method: "GET" });
 
-    // Récupérer la réponse en JSON
-    const tokenData: unknown = await response.json();
+    // Récupérer la réponse en JSON et l'assertion de type
+    const refreshData = (await response.json()) as InstagramAccessTokenResponse;
+    console.log("Instagram Access Token Exchanged:", refreshData);
 
-    // Vérification de la structure des données avec un type guard
-    if (isInstagramAccessTokenResponse(tokenData)) {
-      console.log("Instagram Access Token:", tokenData);
-      return tokenData;
-    } else {
-      throw new Error("Invalid Instagram access token response");
-    }
+    return refreshData;
   } catch (error) {
     console.error("Error during request:", error);
     throw error;

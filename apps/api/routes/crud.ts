@@ -30,9 +30,7 @@ const createRoutes = (entityName: string, controller: any) => {
 
   router.get(`/${entityName}/:id`, checkCache, async (req, res) => {
     try {
-      await client.connect();
       const data = await controller.getById(req.params.id);
-      await client.disconnect();
       res.json(data);
     } catch (error) {
       console.error(`Error fetching ${entityName}:`, error);
