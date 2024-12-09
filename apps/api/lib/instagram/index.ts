@@ -22,21 +22,19 @@ export const getInstagramAccessToken = async (
     "client_secret",
     process.env.INSTAGRAM_CLIENT_SECRET as string
   );
+  formData.append("code", code);
   formData.append("grant_type", "authorization_code");
   formData.append("redirect_uri", REDIRECT_URI);
-  formData.append("code", code);
   console.log(formData);
 
   const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
     body: formData,
   });
 
   // Récupérer la réponse en JSON
   const tokenData: unknown = await response.json();
+  formData.append("tokenData", tokenData);
 
   // Vérification de la structure des données avec un type guard
   if (isInstagramAccessTokenResponse(tokenData)) {
