@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
+import { Platform } from '../../../lib/types';
 
 interface InfluencerCellProps {
   profileImage: string;
@@ -7,7 +7,8 @@ interface InfluencerCellProps {
   displayName: string;
   category: string;
   isVerified: boolean;
-  platform: string;
+  platform: Platform;
+  onProfileClick: () => void;
 }
 
 export default function InfluencerCell({
@@ -16,33 +17,37 @@ export default function InfluencerCell({
   displayName,
   category,
   isVerified,
-  platform
+  platform,
+  onProfileClick
 }: InfluencerCellProps) {
   return (
     <td className="px-6 py-4 whitespace-nowrap">
       <div className="flex items-center">
-        <img
-          src={profileImage}
-          alt={displayName}
-          className="h-10 w-10 rounded-full"
-        />
-        <div className="ml-4">
-          <div className="flex items-center">
-            <Link
-              to={`/${platform}/${username.replace('@', '')}`}
-              className="text-sm font-medium text-purple-600 hover:text-purple-700 transition-colors"
-            >
-              {username}
-            </Link>
-            {isVerified && (
-              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Vérifié
-              </span>
-            )}
-          </div>
-          <div className="text-sm text-gray-500">
-            {category}
-          </div>
+        <div className="flex items-center space-x-3 group">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onProfileClick();
+            }}
+            className="flex items-center space-x-3 hover:text-purple-600 focus:outline-none"
+          >
+            <img
+              src={profileImage}
+              alt={displayName}
+              className="h-10 w-10 rounded-full object-cover"
+            />
+            <div>
+              <div className="flex items-center">
+                <span className="font-medium group-hover:text-purple-600">{username}</span>
+                {isVerified && (
+                  <CheckCircle className="ml-2 h-4 w-4 text-blue-500" />
+                )}
+              </div>
+              <div className="text-sm text-gray-500">
+                {category}
+              </div>
+            </div>
+          </button>
         </div>
       </div>
     </td>

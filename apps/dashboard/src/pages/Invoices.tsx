@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { Tab } from '@headlessui/react';
-import { Download, Plus, X } from 'lucide-react';
-import DashboardLayout from '../components/DashboardLayout';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import AddressAutocomplete from '../components/AddressAutocomplete';
-import { useNotifications } from '../lib/notifications';
-import { generateInvoicePDF } from '../lib/invoice-generator';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { cn } from '../lib/utils';
+import { useState } from "react";
+import { Tab } from "@headlessui/react";
+import { Download, Plus, X } from "lucide-react";
+import DashboardLayout from "../components/DashboardLayout";
+import Button from "../components/Button";
+import Input from "../components/Input";
+import AddressAutocomplete from "../components/AddressAutocomplete";
+import { useNotifications } from "../lib/notifications";
+import { generateInvoicePDF } from "../lib/invoice-generator";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "../lib/utils";
+import { useInvoices } from "../lib/hooks/useInvoices";
 
 interface BillingProfile {
   id: string;
@@ -30,14 +31,14 @@ interface Invoice {
   amount: number;
   tva: number;
   description: string;
-  paymentMethod: 'card' | 'bank' | 'paypal' | 'gains';
+  paymentMethod: "card" | "bank" | "paypal" | "gains";
 }
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  card: 'Carte bancaire',
-  bank: 'Virement bancaire',
-  paypal: 'PayPal',
-  gains: 'Transfert des gains'
+  card: "Carte bancaire",
+  bank: "Virement bancaire",
+  paypal: "PayPal",
+  gains: "Transfert des gains",
 };
 
 export default function Invoices() {
@@ -45,41 +46,33 @@ export default function Invoices() {
   const [selectedTab, setSelectedTab] = useState(0);
   const [showAddProfile, setShowAddProfile] = useState(false);
   const [showProfileSelector, setShowProfileSelector] = useState(false);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
+    null
+  );
   const [newProfile, setNewProfile] = useState<Partial<BillingProfile>>({
-    country: 'France'
+    country: "France",
   });
 
   // Charger les profils et factures depuis le localStorage
-  const [billingProfiles, setBillingProfiles] = useState<BillingProfile[]>(() => {
-    const saved = localStorage.getItem('billing_profiles');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [invoices] = useState<Invoice[]>([
-    {
-      id: 'INV-001',
-      date: new Date('2024-03-15'),
-      amount: 150.00,
-      tva: 30.00,
-      description: 'Recharge de crédits',
-      paymentMethod: 'card'
-    },
-    {
-      id: 'INV-002',
-      date: new Date('2024-03-10'),
-      amount: 75.50,
-      tva: 15.10,
-      description: 'Services d\'engagement',
-      paymentMethod: 'paypal'
+  const [billingProfiles, setBillingProfiles] = useState<BillingProfile[]>(
+    () => {
+      const saved = localStorage.getItem("billing_profiles");
+      return saved ? JSON.parse(saved) : [];
     }
-  ]);
+  );
+
+  const { invoices } = useInvoices();
 
   const handleAddProfile = () => {
-    if (!newProfile.companyName || !newProfile.address || !newProfile.city || !newProfile.zipCode) {
+    if (
+      !newProfile.companyName ||
+      !newProfile.address ||
+      !newProfile.city ||
+      !newProfile.zipCode
+    ) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez remplir tous les champs obligatoires'
+        type: "error",
+        message: "Veuillez remplir tous les champs obligatoires",
       });
       return;
     }
@@ -94,48 +87,52 @@ export default function Invoices() {
       zipCode: newProfile.zipCode!,
       country: newProfile.country!,
       taxId: newProfile.taxId,
-      isDefault: billingProfiles.length === 0
+      isDefault: billingProfiles.length === 0,
     };
 
     const updatedProfiles = [...billingProfiles, profile];
     setBillingProfiles(updatedProfiles);
-    localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-    
+    localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+
     setNewProfile({
-      country: 'France'
+      country: "France",
     });
     setShowAddProfile(false);
-    
+
     addNotification({
-      type: 'success',
-      message: 'Profil de facturation ajouté avec succès'
+      type: "success",
+      message: "Profil de facturation ajouté avec succès",
     });
   };
 
   const handleDeleteProfile = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce profil de facturation ?')) {
-      const updatedProfiles = billingProfiles.filter(profile => profile.id !== id);
+    if (
+      confirm("Êtes-vous sûr de vouloir supprimer ce profil de facturation ?")
+    ) {
+      const updatedProfiles = billingProfiles.filter(
+        (profile) => profile.id !== id
+      );
       setBillingProfiles(updatedProfiles);
-      localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-      
+      localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+
       addNotification({
-        type: 'success',
-        message: 'Profil de facturation supprimé'
+        type: "success",
+        message: "Profil de facturation supprimé",
       });
     }
   };
 
   const handleSetDefaultProfile = (id: string) => {
-    const updatedProfiles = billingProfiles.map(profile => ({
+    const updatedProfiles = billingProfiles.map((profile) => ({
       ...profile,
-      isDefault: profile.id === id
+      isDefault: profile.id === id,
     }));
     setBillingProfiles(updatedProfiles);
-    localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-    
+    localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+
     addNotification({
-      type: 'success',
-      message: 'Profil de facturation par défaut mis à jour'
+      type: "success",
+      message: "Profil de facturation par défaut mis à jour",
     });
   };
 
@@ -146,24 +143,24 @@ export default function Invoices() {
       city: address.city,
       region: address.region,
       zipCode: address.zipCode,
-      country: address.country
+      country: address.country,
     });
   };
 
   const handleDownloadInvoice = async (invoiceId: string) => {
     if (billingProfiles.length === 0) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez créer un profil de facturation'
+        type: "error",
+        message: "Veuillez créer un profil de facturation",
       });
       return;
     }
 
-    const invoice = invoices.find(inv => inv.id === invoiceId);
+    const invoice = invoices.find((inv) => inv.id === invoiceId);
     if (!invoice) return;
 
     let profile: BillingProfile;
-    
+
     if (billingProfiles.length === 1) {
       profile = billingProfiles[0];
     } else {
@@ -186,12 +183,12 @@ export default function Invoices() {
           city: profile.city,
           zipCode: profile.zipCode,
           country: profile.country,
-          vatNumber: profile.taxId
-        }
+          vatNumber: profile.taxId,
+        },
       });
 
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `facture_${invoice.id}.pdf`;
       document.body.appendChild(link);
@@ -200,14 +197,14 @@ export default function Invoices() {
       URL.revokeObjectURL(url);
 
       addNotification({
-        type: 'success',
-        message: 'Facture téléchargée avec succès'
+        type: "success",
+        message: "Facture téléchargée avec succès",
       });
     } catch (error) {
-      console.error('Error generating invoice:', error);
+      console.error("Error generating invoice:", error);
       addNotification({
-        type: 'error',
-        message: 'Erreur lors de la génération de la facture'
+        type: "error",
+        message: "Erreur lors de la génération de la facture",
       });
     }
   };
@@ -215,9 +212,9 @@ export default function Invoices() {
   const handleSelectProfileForInvoice = async (profileId: string) => {
     if (!selectedInvoiceId) return;
 
-    const invoice = invoices.find(inv => inv.id === selectedInvoiceId);
-    const profile = billingProfiles.find(p => p.id === profileId);
-    
+    const invoice = invoices.find((inv) => inv.id === selectedInvoiceId);
+    const profile = billingProfiles.find((p) => p.id === profileId);
+
     if (!invoice || !profile) return;
 
     try {
@@ -234,12 +231,12 @@ export default function Invoices() {
           city: profile.city,
           zipCode: profile.zipCode,
           country: profile.country,
-          vatNumber: profile.taxId
-        }
+          vatNumber: profile.taxId,
+        },
       });
 
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `facture_${invoice.id}.pdf`;
       document.body.appendChild(link);
@@ -249,16 +246,16 @@ export default function Invoices() {
 
       setShowProfileSelector(false);
       setSelectedInvoiceId(null);
-      
+
       addNotification({
-        type: 'success',
-        message: 'Facture téléchargée avec succès'
+        type: "success",
+        message: "Facture téléchargée avec succès",
       });
     } catch (error) {
-      console.error('Error generating invoice:', error);
+      console.error("Error generating invoice:", error);
       addNotification({
-        type: 'error',
-        message: 'Erreur lors de la génération de la facture'
+        type: "error",
+        message: "Erreur lors de la génération de la facture",
       });
     }
   };
@@ -278,11 +275,11 @@ export default function Invoices() {
             <Tab
               className={({ selected }) =>
                 cn(
-                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2',
+                  "w-full rounded-lg py-2.5 text-sm font-medium leading-5",
+                  "ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2",
                   selected
-                    ? 'bg-white text-purple-700 shadow'
-                    : 'text-purple-600 hover:bg-white/[0.12] hover:text-purple-800'
+                    ? "bg-white text-purple-700 shadow"
+                    : "text-purple-600 hover:bg-white/[0.12] hover:text-purple-800"
                 )
               }
             >
@@ -291,11 +288,11 @@ export default function Invoices() {
             <Tab
               className={({ selected }) =>
                 cn(
-                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2',
+                  "w-full rounded-lg py-2.5 text-sm font-medium leading-5",
+                  "ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2",
                   selected
-                    ? 'bg-white text-purple-700 shadow'
-                    : 'text-purple-600 hover:bg-white/[0.12] hover:text-purple-800'
+                    ? "bg-white text-purple-700 shadow"
+                    : "text-purple-600 hover:bg-white/[0.12] hover:text-purple-800"
                 )
               }
             >
@@ -343,7 +340,7 @@ export default function Invoices() {
                           {invoice.id}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {format(invoice.date, 'dd/MM/yyyy', { locale: fr })}
+                          {format(invoice.date, "dd/MM/yyyy", { locale: fr })}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {invoice.description}
@@ -403,11 +400,15 @@ export default function Invoices() {
                           <h3 className="text-lg font-medium text-gray-900">
                             {profile.companyName}
                           </h3>
-                          <p className="text-sm text-gray-500">{profile.fullName}</p>
+                          <p className="text-sm text-gray-500">
+                            {profile.fullName}
+                          </p>
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
                           <p>{profile.address}</p>
-                          <p>{profile.zipCode} {profile.city}</p>
+                          <p>
+                            {profile.zipCode} {profile.city}
+                          </p>
                           <p>{profile.region}</p>
                           <p>{profile.country}</p>
                           {profile.taxId && (
@@ -421,7 +422,9 @@ export default function Invoices() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleSetDefaultProfile(profile.id)}
+                              onClick={() =>
+                                handleSetDefaultProfile(profile.id)
+                              }
                             >
                               Définir par défaut
                             </Button>
@@ -461,15 +464,18 @@ export default function Invoices() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="Nom de l'entreprise"
-                  value={newProfile.companyName || ''}
+                  value={newProfile.companyName || ""}
                   onChange={(e) =>
-                    setNewProfile({ ...newProfile, companyName: e.target.value })
+                    setNewProfile({
+                      ...newProfile,
+                      companyName: e.target.value,
+                    })
                   }
                   required
                 />
                 <Input
                   label="Nom complet"
-                  value={newProfile.fullName || ''}
+                  value={newProfile.fullName || ""}
                   onChange={(e) =>
                     setNewProfile({ ...newProfile, fullName: e.target.value })
                   }
@@ -481,7 +487,7 @@ export default function Invoices() {
 
               <Input
                 label="Numéro de TVA (optionnel)"
-                value={newProfile.taxId || ''}
+                value={newProfile.taxId || ""}
                 onChange={(e) =>
                   setNewProfile({ ...newProfile, taxId: e.target.value })
                 }
@@ -494,9 +500,7 @@ export default function Invoices() {
                 >
                   Annuler
                 </Button>
-                <Button onClick={handleAddProfile}>
-                  Ajouter
-                </Button>
+                <Button onClick={handleAddProfile}>Ajouter</Button>
               </div>
             </div>
           </div>
@@ -511,10 +515,12 @@ export default function Invoices() {
               <h3 className="text-lg font-medium text-gray-900">
                 Sélectionner un profil de facturation
               </h3>
-              <button onClick={() => {
-                setShowProfileSelector(false);
-                setSelectedInvoiceId(null);
-              }}>
+              <button
+                onClick={() => {
+                  setShowProfileSelector(false);
+                  setSelectedInvoiceId(null);
+                }}
+              >
                 <X className="h-6 w-6 text-gray-400" />
               </button>
             </div>

@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Plus, Search } from "lucide-react";
-import Button from "./Button";
-import AccountCard from "./AccountCard";
-import AccountSettingsModal from "./AccountSettingsModal";
-import { SocialAccount } from "../lib/types";
+import { useState } from 'react';
+import { Plus, Search } from 'lucide-react';
+import Button from './Button';
+import AccountCard from './AccountCard';
+import AccountSettingsModal from './AccountSettingsModal';
+import { SocialAccount } from '../lib/types';
 
 interface MyAccountsProps {
   accounts: SocialAccount[];
@@ -12,19 +12,18 @@ interface MyAccountsProps {
   onDeleteAccount: (id: string) => void;
 }
 
-export default function MyAccounts({
-  accounts,
-  onAddAccount,
+export default function MyAccounts({ 
+  accounts, 
+  onAddAccount, 
   onUpdateAccount,
-  onDeleteAccount,
+  onDeleteAccount 
 }: MyAccountsProps) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
 
-  const filteredAccounts = accounts.filter(
-    (account) =>
-      account.username.toLowerCase().includes(search.toLowerCase()) ||
-      account.displayName.toLowerCase().includes(search.toLowerCase())
+  const filteredAccounts = accounts.filter(account => 
+    account.username.toLowerCase().includes(search.toLowerCase()) ||
+    account.displayName.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -55,18 +54,15 @@ export default function MyAccounts({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAccounts.map(
-          (account) =>
-            account.platform !== "x" && (
-              <AccountCard
-                key={account.id}
-                account={account}
-                onUpdate={(updates) => onUpdateAccount(account.id, updates)}
-                onDelete={() => onDeleteAccount(account.id)}
-              />
-            )
-        )}
-
+        {filteredAccounts.map((account) => (
+          <AccountCard
+            key={account.id}
+            account={account}
+            onUpdate={(updates) => onUpdateAccount(account.id, updates)}
+            onDelete={() => onDeleteAccount(account.id)}
+          />
+        ))}
+        
         {filteredAccounts.length === 0 && (
           <div className="col-span-3 py-12 text-center text-gray-500">
             Aucun compte trouvé

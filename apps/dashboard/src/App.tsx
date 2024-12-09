@@ -20,13 +20,17 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import InfluencerCatalog from "./pages/InfluencerCatalog";
 import Orders from "./pages/Orders";
+import Campaigns from "./pages/Campaigns";
+import CampaignOrders from "./pages/CampaignOrders";
 import Subscriptions from "./pages/Subscriptions";
+import SubscriptionHistory from "./pages/SubscriptionHistory";
 import Invoices from "./pages/Invoices";
 import Pricing from "./pages/Pricing";
 import Checkout from "./pages/Checkout";
 import TopUp from "./pages/TopUp";
 import Withdraw from "./pages/Withdraw";
 import MyAccounts from "./pages/MyAccounts";
+import BuyerAccounts from "./pages/BuyerAccounts";
 import Proposals from "./pages/Proposals";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
@@ -55,10 +59,6 @@ import AdminPerformance from "./pages/admin/Performance";
 import AdminSettings from "./pages/admin/Settings";
 import AdminTheme from "./pages/admin/Theme";
 
-import { useEffect } from "react";
-import { ref, get, onValue } from "firebase/database";
-import { database } from "./lib/firebase";
-
 import { useAuth } from "./lib/auth";
 
 interface PrivateRouteProps {
@@ -81,29 +81,10 @@ function PrivateRoute({ children, requireAdmin = false }: PrivateRouteProps) {
 }
 
 export default function App() {
-  console.log(import.meta.env.VITE_NEXT_PUBLIC_API_URL)
-  useEffect(() => {
-    const postsRef = ref(database, "posts/");
-
-    // Écoute les changements en temps réel
-    onValue(postsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        console.log("New post data:", data); // Attendu
-      } else {
-        console.log("No data found at 'posts/'"); // Si le chemin est vide
-      }
-    });
-
-    return () => {
-      console.log("Listener detached");
-    };
-  }, []);
-
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <NotificationProvider>
             <CartProvider>
               <FavoritesProvider>
@@ -111,10 +92,7 @@ export default function App() {
                   <OrderNumberProvider>
                     <ThemeProvider>
                       <Routes>
-                        <Route
-                          path="/"
-                          element={<Navigate to="/dashboard/buy" />}
-                        />
+                        <Route path="/" element={<Navigate to="/login" />} />
                         <Route path="/pricing" element={<Pricing />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<SignUp />} />
@@ -141,6 +119,30 @@ export default function App() {
                           }
                         />
                         <Route
+                          path="/dashboard/buyer-accounts"
+                          element={
+                            <PrivateRoute>
+                              <BuyerAccounts />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/dashboard/campaigns"
+                          element={
+                            <PrivateRoute>
+                              <Campaigns />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/dashboard/campaigns/:id/orders"
+                          element={
+                            <PrivateRoute>
+                              <CampaignOrders />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
                           path="/dashboard/orders"
                           element={
                             <PrivateRoute>
@@ -153,6 +155,14 @@ export default function App() {
                           element={
                             <PrivateRoute>
                               <Subscriptions />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/dashboard/subscriptions/:id/history"
+                          element={
+                            <PrivateRoute>
+                              <SubscriptionHistory />
                             </PrivateRoute>
                           }
                         />
@@ -390,8 +400,8 @@ export default function App() {
               </FavoritesProvider>
             </CartProvider>
           </NotificationProvider>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </ErrorBoundary>
   );
 }

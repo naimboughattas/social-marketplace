@@ -11,8 +11,8 @@ import { client, setCachedData } from "./lib/redis";
 //---------------------------------
 // REST route files
 //---------------------------------
-import userRoutes from "./routes/user";
-import accountRoutes from "./routes/account";
+import crudRoutes from "./routes/crud";
+import cartRoutes from "./routes/cart";
 
 //---------------------------------
 // Oauth route files
@@ -30,17 +30,19 @@ const app = express();
 const PORT = 8000;
 
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (origin && whitelist.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-  })
-);
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (origin && whitelist.indexOf(origin) !== -1) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//   })
+// );
+
+app.use(cors());
 
 app.get("/", async (_req, res) => {
   res.send("Hello World");
@@ -60,8 +62,8 @@ app.get("/api/cron", async (_req, res) => {
 // Use route files
 //---------------------------------
 
-app.use("/", jsonParser, userRoutes);
-app.use("/", accountRoutes);
+app.use("/", jsonParser, crudRoutes);
+app.use("/", jsonParser, cartRoutes);
 
 app.use("/", facebookRoutes);
 app.use("/", instagramRoutes);

@@ -1,10 +1,14 @@
+// src/components/MultiSelectServiceModal.tsx
 import { useState } from 'react';
-import { X, Grid, Link as LinkIcon } from 'lucide-react';
+import { X, Info } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
+import * as RadioGroup from '@radix-ui/react-radio-group';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import Button from './Button';
 import Input from './Input';
 import { Service } from '../lib/types';
 import { useNotifications } from '../lib/notifications';
+import { useCart } from '../lib/cart';
 import CommentOptions from './comment/CommentOptions';
 import PostSelection from './post/PostSelection';
 
@@ -15,9 +19,45 @@ interface MultiSelectServiceModalProps {
 }
 
 type Step = 'service' | 'type' | 'username' | 'comment' | 'posts';
-type InteractionType = 'specific' | 'specific-future' | 'future';
+type InteractionType = 'one-month' | 'monthly';
 type CommentType = 'custom' | 'delegated';
 type CommentLength = 'emoji' | 'short' | 'medium' | 'long';
+
+const FOLLOW_INTERACTION_TYPES = [
+  {
+    id: 'one-month',
+    title: 'Suivi pendant 1 mois',
+    description: 'L\'influenceur suivra le compte pendant 1 mois puis se désabonnera automatiquement',
+    priceLabel: 'pour 1 mois'
+  },
+  {
+    id: 'monthly',
+    title: 'Renouveler le suivi tous les mois',
+    description: 'L\'influenceur restera abonné et le montant sera automatiquement débité chaque mois',
+    priceLabel: '/ mois'
+  }
+];
+
+const POST_INTERACTION_TYPES = [
+  {
+    id: 'specific',
+    title: 'Posts spécifiques',
+    description: 'Sélectionnez un ou plusieurs posts existants',
+    priceLabel: '/ post'
+  },
+  {
+    id: 'specific-future',
+    title: 'Posts spécifiques + Futurs posts',
+    description: 'Sélectionnez des posts existants et recevez automatiquement des interactions sur vos futurs posts',
+    priceLabel: '/ posts & futurs posts'
+  },
+  {
+    id: 'future',
+    title: 'Tous les futurs posts',
+    description: 'Recevez automatiquement des interactions sur tous vos nouveaux posts',
+    priceLabel: '/ futurs posts'
+  }
+];
 
 export default function MultiSelectServiceModal({
   isOpen,
@@ -25,9 +65,10 @@ export default function MultiSelectServiceModal({
   onConfirm
 }: MultiSelectServiceModalProps) {
   const { addNotification } = useNotifications();
+  const { addItem } = useCart();
   const [step, setStep] = useState<Step>('service');
   const [selectedService, setSelectedService] = useState<Service>('follow');
-  const [interactionType, setInteractionType] = useState<InteractionType>('specific');
+  const [interactionType, setInteractionType] = useState<InteractionType>('one-month');
   const [targetHandle, setTargetHandle] = useState('');
   const [showPostSelection, setShowPostSelection] = useState(true);
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
@@ -40,7 +81,7 @@ export default function MultiSelectServiceModal({
   const resetForm = () => {
     setStep('service');
     setSelectedService('follow');
-    setInteractionType('specific');
+    setInteractionType('one-month');
     setTargetHandle('');
     setShowPostSelection(true);
     setSelectedPosts([]);
@@ -55,6 +96,13 @@ export default function MultiSelectServiceModal({
     if (step === 'service') {
       setStep('type');
     } else if (step === 'type') {
+      if (!interactionType) {
+        addNotification({
+          type: 'error',
+          message: 'Veuillez sélectionner un type d\'interaction'
+        });
+        return;
+      }
       setStep('username');
     } else if (step === 'username') {
       if (!targetHandle) {
@@ -79,11 +127,7 @@ export default function MultiSelectServiceModal({
         });
         return;
       }
-      if (interactionType === 'future') {
-        handleSubmit();
-      } else {
-        setStep('posts');
-      }
+      handleSubmit();
     } else if (step === 'posts') {
       if (!showPostSelection && !postUrl) {
         addNotification({
@@ -107,7 +151,7 @@ export default function MultiSelectServiceModal({
     let finalTarget = targetHandle;
     let finalCommentText = undefined;
 
-    if (selectedService !== 'follow' && interactionType !== 'future') {
+    if (selectedService !== 'follow') {
       const posts = showPostSelection ? selectedPosts : [postUrl];
       finalTarget = posts.join('|');
     }
@@ -118,7 +162,12 @@ export default function MultiSelectServiceModal({
         : `[${commentLength}]${commentExample ? ` Exemple: ${commentExample}` : ''}`;
     }
 
-    onConfirm(selectedService, finalTarget, finalCommentText);
+    onConfirm(
+      selectedService,
+      finalTarget,
+      finalCommentText
+    );
+
     resetForm();
     onClose();
   };
@@ -168,38 +217,53 @@ export default function MultiSelectServiceModal({
             {step === 'type' && (
               <div>
                 <h3 className="text-lg font-medium mb-4">Type d'interaction</h3>
-                <div className="space-y-4">
-                  {[
-                    {
-                      id: 'specific',
-                      title: 'Posts spécifiques',
-                      description: 'Sélectionnez un ou plusieurs posts existants'
-                    },
-                    {
-                      id: 'specific-future',
-                      title: 'Posts spécifiques + Futurs posts',
-                      description: 'Sélectionnez des posts existants et recevez automatiquement des interactions sur vos futurs posts'
-                    },
-                    {
-                      id: 'future',
-                      title: 'Tous les futurs posts',
-                      description: 'Recevez automatiquement des interactions sur tous vos nouveaux posts'
-                    }
-                  ].map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setInteractionType(type.id as InteractionType)}
-                      className={`w-full p-4 rounded-lg border-2 text-left transition-colors ${
+                <RadioGroup.Root
+                  value={interactionType}
+                  onValueChange={(value) => setInteractionType(value as InteractionType)}
+                  className="space-y-3"
+                >
+                  {(selectedService === 'follow' ? FOLLOW_INTERACTION_TYPES : POST_INTERACTION_TYPES).map((type) => (
+                    <RadioGroup.Item key={type.id} value={type.id} asChild>
+                      <div className={`relative flex items-start p-4 rounded-lg border-2 transition-colors cursor-pointer ${
                         interactionType === type.id
                           ? 'border-purple-600 bg-purple-50'
                           : 'border-gray-200 hover:border-purple-200'
-                      }`}
-                    >
-                      <div className="font-medium">{type.title}</div>
-                      <p className="text-sm text-gray-500 mt-1">{type.description}</p>
-                    </button>
+                      }`}>
+                        <div className="flex h-5 items-center">
+                          <RadioGroup.Indicator className="h-5 w-5 rounded-full border-2 border-purple-600 flex items-center justify-center">
+                            <div className="h-2.5 w-2.5 rounded-full bg-purple-600" />
+                          </RadioGroup.Indicator>
+                        </div>
+                        <div className="ml-3">
+                          <label className="font-medium text-gray-900">
+                            {type.title}
+                          </label>
+                          <p className="text-sm text-gray-500 mt-1">{type.description}</p>
+                          {type.id === 'future' && (
+                            <Tooltip.Provider>
+                              <Tooltip.Root>
+                                <Tooltip.Trigger asChild>
+                                  <div className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                                    <Info className="h-4 w-4" />
+                                  </div>
+                                </Tooltip.Trigger>
+                                <Tooltip.Portal>
+                                  <Tooltip.Content
+                                    className="bg-gray-900 text-white px-3 py-2 rounded text-sm max-w-xs"
+                                    sideOffset={5}
+                                  >
+                                    Une commande sera automatiquement passée dès qu'un nouveau post est détecté
+                                    <Tooltip.Arrow className="fill-gray-900" />
+                                  </Tooltip.Content>
+                                </Tooltip.Portal>
+                              </Tooltip.Root>
+                            </Tooltip.Provider>
+                          )}
+                        </div>
+                      </div>
+                    </RadioGroup.Item>
                   ))}
-                </div>
+                </RadioGroup.Root>
               </div>
             )}
 
@@ -241,37 +305,26 @@ export default function MultiSelectServiceModal({
             )}
 
             <div className="flex justify-end space-x-3 pt-4 border-t">
-              {step === 'service' ? (
-                <>
-                  <Button variant="outline" onClick={onClose}>
-                    Annuler
-                  </Button>
-                  <Button onClick={handleNext}>
-                    Continuer
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const prevSteps: Record<Step, Step> = {
-                        service: 'service',
-                        type: 'service',
-                        username: 'type',
-                        comment: 'username',
-                        posts: selectedService === 'comment' ? 'comment' : 'username'
-                      };
-                      setStep(prevSteps[step]);
-                    }}
-                  >
-                    Retour
-                  </Button>
-                  <Button onClick={handleNext}>
-                    {step === 'posts' || (selectedService === 'follow' && step === 'username') ? 'Confirmer' : 'Continuer'}
-                  </Button>
-                </>
+              {step !== 'service' && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const prevSteps: Record<Step, Step> = {
+                      service: 'service',
+                      type: 'service',
+                      username: 'type',
+                      comment: 'username',
+                      posts: selectedService === 'comment' ? 'comment' : 'username'
+                    };
+                    setStep(prevSteps[step]);
+                  }}
+                >
+                  Retour
+                </Button>
               )}
+              <Button onClick={handleNext}>
+                {step === 'posts' || (selectedService === 'follow' && step === 'username') || step === 'comment' ? 'Confirmer' : 'Continuer'}
+              </Button>
             </div>
           </div>
         </Dialog.Content>

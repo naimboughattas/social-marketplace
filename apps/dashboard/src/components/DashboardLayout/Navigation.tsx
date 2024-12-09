@@ -11,7 +11,9 @@ import {
   Share2,
   RefreshCw,
   UserCheck,
-  Trophy
+  Trophy,
+  Megaphone,
+  UserPlus
 } from 'lucide-react';
 
 interface NavItem {
@@ -35,8 +37,10 @@ const defaultNavigation: NavSection[] = [
     title: 'ACHETER',
     items: [
       { name: 'Catalogue', href: '/dashboard/buy', icon: ShoppingBag },
+     { name: 'Mes comptes', href: '/dashboard/my-accounts', icon: Users },
       { name: 'Recharger son compte', href: '/dashboard/topup', icon: CreditCard },
       { name: 'Commandes', href: '/dashboard/orders', icon: ClipboardList },
+      { name: 'Campagnes', href: '/dashboard/campaigns', icon: Megaphone },
       { name: 'Abonnements', href: '/dashboard/subscriptions', icon: RefreshCw },
       { name: 'Factures', href: '/dashboard/invoices', icon: FileText },
       { name: 'Récompenses', href: '/dashboard/buyer-rewards', icon: Trophy }

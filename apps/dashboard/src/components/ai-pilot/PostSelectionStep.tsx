@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Grid, Link as LinkIcon } from 'lucide-react';
-import Input from '../Input';
 import Button from '../Button';
+import Input from '../Input';
 
 interface PostSelectionStepProps {
   showPostSelection: boolean;
-  onShowPostSelectionChange: (show: boolean) => void;
   selectedPosts: string[];
-  onSelectedPostsChange: (posts: string[]) => void;
   postUrl: string;
+  onShowPostSelectionChange: (show: boolean) => void;
+  onSelectedPostsChange: (posts: string[]) => void;
   onPostUrlChange: (url: string) => void;
 }
 
@@ -22,10 +22,10 @@ const MOCK_POSTS = [
 
 export default function PostSelectionStep({
   showPostSelection,
-  onShowPostSelectionChange,
   selectedPosts,
-  onSelectedPostsChange,
   postUrl,
+  onShowPostSelectionChange,
+  onSelectedPostsChange,
   onPostUrlChange
 }: PostSelectionStepProps) {
   const [selectAll, setSelectAll] = useState(false);

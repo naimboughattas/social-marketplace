@@ -1,13 +1,21 @@
-import { useEffect, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { Plus, Search, Filter } from "lucide-react";
 import Button from "../components/Button";
 import AccountCard from "../components/AccountCard";
 import AccountSettingsModal from "../components/AccountSettingsModal";
-import { SocialAccount, Platform } from "../lib/types";
+import {
+  Platform,
+  PLATFORMS,
+  PLATFORM_LABELS,
+  CATEGORIES,
+  LANGUAGES,
+  COUNTRIES,
+} from "../lib/types";
 import DashboardLayout from "../components/DashboardLayout";
-import { useAccounts } from "../hooks/useAccounts";
 import * as Tabs from "@radix-ui/react-tabs";
+import * as Dialog from "@radix-ui/react-dialog";
 import { cn } from "../lib/utils";
+import { useAccounts } from "../lib/hooks/useAccounts";
 
 type Tab = "all" | "verified" | "pending";
 
@@ -24,15 +32,8 @@ export default function MyAccounts() {
     loading: isFetching,
     error,
     handleCreateAccount,
-    handleUpdateAccount,
     handleDeleteAccount,
-    handleStartVerification,
   } = useAccounts();
-  // get the code callback from instagram redirection
-  // const token = new URLSearchParams(window.location.search).get("token");
-  // const code = new URLSearchParams(window.location.search).get("code");
-  // const user_id = new URLSearchParams(window.location.search).get("user_id");
-  const [isCreating, setIsCreating] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [search, setSearch] = useState("");
@@ -45,11 +46,11 @@ export default function MyAccounts() {
   });
 
   const filteredAccounts = accounts.filter((account) => {
-    // Filter by tab
+    // Filtrer par onglet
     if (currentTab === "verified" && !account.isVerified) return false;
     if (currentTab === "pending" && account.isVerified) return false;
 
-    // Filter by search
+    // Filtrer par recherche
     if (
       search &&
       !account.username.toLowerCase().includes(search.toLowerCase()) &&
@@ -58,7 +59,7 @@ export default function MyAccounts() {
       return false;
     }
 
-    // Filter by criteria
+    // Filtrer par critères
     if (filters.platform !== "all" && account.platform !== filters.platform)
       return false;
     if (filters.category && account.category !== filters.category) return false;
@@ -68,7 +69,7 @@ export default function MyAccounts() {
     return true;
   });
 
-  if (isFetching || isCreating) {
+  if (isFetching) {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center h-64">
@@ -116,6 +117,10 @@ export default function MyAccounts() {
                 className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
+            <Button variant="outline" onClick={() => setShowFilters(true)}>
+              <Filter className="h-4 w-4 mr-2" />
+              Filtres
+            </Button>
             <Button onClick={() => setShowAddModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un compte
@@ -168,9 +173,7 @@ export default function MyAccounts() {
               <AccountCard
                 key={account.id}
                 accountId={account.id}
-                onUpdate={(updates) => handleUpdateAccount(account.id, updates)}
                 onDelete={() => handleDeleteAccount(account.id)}
-                onStartVerification={() => handleStartVerification(account.id)}
               />
             ))}
 
@@ -188,6 +191,122 @@ export default function MyAccounts() {
             onSave={handleCreateAccount}
           />
         )}
+
+        <Dialog.Root open={showFilters} onOpenChange={setShowFilters}>
+          <Dialog.Portal>
+            <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+            <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
+              <Dialog.Title className="text-lg font-medium mb-4">
+                Filtres
+              </Dialog.Title>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Réseau social
+                  </label>
+                  <select
+                    value={filters.platform}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        platform: e.target.value as Platform | "all",
+                      })
+                    }
+                    className="w-full rounded-md border border-gray-200 p-2"
+                  >
+                    <option value="all">Tous les réseaux</option>
+                    {PLATFORMS.map((platform) => (
+                      <option key={platform} value={platform}>
+                        {PLATFORM_LABELS[platform]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Catégorie
+                  </label>
+                  <select
+                    value={filters.category}
+                    onChange={(e) =>
+                      setFilters({ ...filters, category: e.target.value })
+                    }
+                    className="w-full rounded-md border border-gray-200 p-2"
+                  >
+                    <option value="">Toutes les catégories</option>
+                    {CATEGORIES.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Langue
+                  </label>
+                  <select
+                    value={filters.language}
+                    onChange={(e) =>
+                      setFilters({ ...filters, language: e.target.value })
+                    }
+                    className="w-full rounded-md border border-gray-200 p-2"
+                  >
+                    <option value="">Toutes les langues</option>
+                    {LANGUAGES.map((language) => (
+                      <option key={language} value={language}>
+                        {language}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pays
+                  </label>
+                  <select
+                    value={filters.country}
+                    onChange={(e) =>
+                      setFilters({ ...filters, country: e.target.value })
+                    }
+                    className="w-full rounded-md border border-gray-200 p-2"
+                  >
+                    <option value="">Tous les pays</option>
+                    {COUNTRIES.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex justify-end space-x-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setFilters({
+                        platform: "all",
+                        category: "",
+                        language: "",
+                        country: "",
+                      });
+                      setShowFilters(false);
+                    }}
+                  >
+                    Réinitialiser
+                  </Button>
+                  <Button onClick={() => setShowFilters(false)}>
+                    Appliquer
+                  </Button>
+                </div>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
       </div>
     </DashboardLayout>
   );

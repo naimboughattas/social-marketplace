@@ -1,13 +1,19 @@
-import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { collection, addDoc, writeBatch, doc } from 'firebase/firestore';
-import { db } from './firebase';
-import { useAuth } from './auth';
-import { useNotifications } from './notifications';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  ReactNode,
+  useEffect,
+} from "react";
+import { collection, addDoc, writeBatch, doc } from "firebase/firestore";
+import { db } from "./firebase";
+import { useAuth } from "./auth";
+import { useNotifications } from "./notifications";
 
 export interface CartItem {
   id: string;
   influencerUsername: string;
-  service: 'follow' | 'like' | 'comment' | 'repost_story';
+  service: "follow" | "like" | "comment" | "repost_story";
   price: number;
   targetHandle?: string;
   postUrl?: string;
@@ -32,27 +38,30 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | null>(null);
 
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: CartItem }
-  | { type: 'REMOVE_ITEM'; payload: string }
-  | { type: 'CLEAR_CART' };
+  | { type: "SET_CART"; payload: CartState }
+  | { type: "ADD_ITEM"; payload: CartItem }
+  | { type: "REMOVE_ITEM"; payload: string }
+  | { type: "CLEAR_CART" };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
-    case 'ADD_ITEM':
+    // case "SET_CART":
+    //   return action.payload;
+    case "ADD_ITEM":
       return {
         items: [...state.items, action.payload],
-        total: state.total + action.payload.price
+        total: state.total + action.payload.price,
       };
-    case 'REMOVE_ITEM':
-      const item = state.items.find(i => i.id === action.payload);
+    case "REMOVE_ITEM":
+      const item = state.items.find((i) => i.id === action.payload);
       return {
-        items: state.items.filter(i => i.id !== action.payload),
-        total: state.total - (item?.price || 0)
+        items: state.items.filter((i) => i.id !== action.payload),
+        total: state.total - (item?.price || 0),
       };
-    case 'CLEAR_CART':
+    case "CLEAR_CART":
       return {
         items: [],
-        total: 0
+        total: 0,
       };
     default:
       return state;
@@ -64,35 +73,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [state, dispatch] = useReducer(cartReducer, {
     items: [],
-    total: 0
+    total: 0,
   });
 
   const addItem = (item: CartItem, silent = false) => {
-    dispatch({ type: 'ADD_ITEM', payload: item });
+    dispatch({ type: "ADD_ITEM", payload: item });
     if (!silent) {
       addNotification({
-        type: 'success',
-        message: `Service ajouté au panier : ${item.service} par ${item.influencerUsername}`
+        type: "success",
+        message: `Service ajouté au panier : ${item.service} par ${item.influencerUsername}`,
       });
     }
   };
 
   const removeItem = (id: string) => {
-    dispatch({ type: 'REMOVE_ITEM', payload: id });
+    dispatch({ type: "REMOVE_ITEM", payload: id });
   };
 
   const clearCart = () => {
-    dispatch({ type: 'CLEAR_CART' });
+    dispatch({ type: "CLEAR_CART" });
   };
 
   const checkout = async () => {
-    if (!user) throw new Error('Not authenticated');
+    if (!user) throw new Error("Not authenticated");
 
     try {
       const batch = writeBatch(db);
-      const ordersRef = collection(db, 'orders');
+      const ordersRef = collection(db, "orders");
 
-      state.items.forEach(item => {
+      state.items.forEach((item) => {
         const orderRef = doc(ordersRef);
         batch.set(orderRef, {
           userId: user.id,
@@ -103,29 +112,54 @@ export function CartProvider({ children }: { children: ReactNode }) {
           commentText: item.commentText,
           isRecurring: item.isRecurring,
           isFuturePosts: item.isFuturePosts,
-          status: 'pending',
-          createdAt: new Date()
+          status: "pending",
+          createdAt: new Date(),
         });
       });
 
       await batch.commit();
       clearCart();
-      
+
       addNotification({
-        type: 'success',
-        message: 'Commande effectuée avec succès'
+        type: "success",
+        message: "Commande effectuée avec succès",
       });
     } catch (error) {
       addNotification({
-        type: 'error',
-        message: 'Erreur lors de la commande'
+        type: "error",
+        message: "Erreur lors de la commande",
       });
       throw error;
     }
   };
 
+  // useEffect(() => {
+  //   const setupUserCart = async () => {
+  //     const cart = await fetch(
+  //       `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/cart/${user.id}`,
+  //       {
+  //         headers: new Headers({
+  //           "ngrok-skip-browser-warning": "69420",
+  //         }),
+  //       }
+  //     );
+  //     if (cart.ok) {
+  //       const cartData = await cart.json();
+  //       dispatch({
+  //         type: "SET_CART",
+  //         payload: cartData.cart,
+  //       });
+  //     }
+  //   };
+  //   // if (user?.id) {
+  //   //   setupUserCart();
+  //   // }
+  // }, [user?.id]);
+
   return (
-    <CartContext.Provider value={{ state, addItem, removeItem, clearCart, checkout }}>
+    <CartContext.Provider
+      value={{ state, addItem, removeItem, clearCart, checkout }}
+    >
       {children}
     </CartContext.Provider>
   );
@@ -134,7 +168,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 export function useCart() {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 }

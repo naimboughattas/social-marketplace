@@ -25,3 +25,12 @@ export const setCachedData = async (key: string, value: any): Promise<void> => {
     throw error;
   }
 };
+
+// delete cached data
+export const deleteCachedData = async (key: string): Promise<void> => {
+  try {
+    await client.del(key);
+  } catch (error) {
+    throw error;
+  }
+};

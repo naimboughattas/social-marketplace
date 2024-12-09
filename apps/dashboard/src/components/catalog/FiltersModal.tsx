@@ -3,6 +3,8 @@ import { X } from 'lucide-react';
 import Button from '../Button';
 import Input from '../Input';
 import { CATEGORIES, LANGUAGES, COUNTRIES } from '../../lib/types';
+import Switch from '../Switch';
+import CityInput from '../CityInput';
 
 interface FiltersModalProps {
   isOpen: boolean;
@@ -11,10 +13,13 @@ interface FiltersModalProps {
     category: string;
     language: string;
     country: string;
+    city: string;
     minFollowers: string;
     maxFollowers: string;
     minPrice: string;
     maxPrice: string;
+    showOnlyFavorites: boolean;
+    hideCollaborators: boolean;
   };
   onFiltersChange: (filters: any) => void;
   onReset: () => void;
@@ -92,6 +97,16 @@ export default function FiltersModal({
               </select>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ville
+              </label>
+              <CityInput
+                value={filters.city}
+                onSelect={(city) => onFiltersChange({ ...filters, city })}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -140,6 +155,20 @@ export default function FiltersModal({
                   placeholder="∞"
                 />
               </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t">
+              <Switch
+                checked={filters.showOnlyFavorites}
+                onChange={(checked) => onFiltersChange({ ...filters, showOnlyFavorites: checked })}
+                label="Afficher uniquement les favoris"
+              />
+
+              <Switch
+                checked={filters.hideCollaborators}
+                onChange={(checked) => onFiltersChange({ ...filters, hideCollaborators: checked })}
+                label="Ne pas afficher les collaborateurs précédents"
+              />
             </div>
 
             <div className="flex justify-end space-x-3 mt-6">

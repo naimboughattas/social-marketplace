@@ -1,7 +1,11 @@
-import { UserPlus, Heart, MessageCircle, Share2 } from 'lucide-react';
-import Button from '../Button';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { UserPlus, Heart, MessageCircle, Share2, ExternalLink } from 'lucide-react';
+import Button from '../../components/Button';
 import { SocialAccount, Service } from '../../lib/types';
 import SortableHeader from './SortableHeader';
+import { useFavorites } from '../../lib/favorites';
+import InfluencerProfileModal from './InfluencerProfileModal';
 
 interface InfluencerTableProps {
   influencers: SocialAccount[];
@@ -22,148 +26,192 @@ export default function InfluencerTable({
   multiSelectMode = false,
   selectedInfluencers = []
 }: InfluencerTableProps) {
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const [selectedInfluencer, setSelectedInfluencer] = useState<SocialAccount | null>(null);
+
+  const handleFavoriteClick = (e: React.MouseEvent, influencer: SocialAccount) => {
+    e.stopPropagation(); // Prevent triggering multiselect
+    if (isFavorite(influencer.id)) {
+      removeFavorite(influencer.id);
+    } else {
+      addFavorite(influencer);
+    }
+  };
+
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {multiSelectMode && (
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Sélection
-              </th>
-            )}
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Influenceur
-            </th>
-            <SortableHeader field="followers" label="Followers" currentField={sortField} direction={sortDirection} onSort={onSort} />
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Localisation
-            </th>
-            <SortableHeader field="delai" label="Délai" currentField={sortField} direction={sortDirection} onSort={onSort} />
-            {!multiSelectMode ? (
-              <>
-                <SortableHeader field="follow" label="Follow" currentField={sortField} direction={sortDirection} onSort={onSort} />
-                <SortableHeader field="like" label="Like" currentField={sortField} direction={sortDirection} onSort={onSort} />
-                <SortableHeader field="comment" label="Comment" currentField={sortField} direction={sortDirection} onSort={onSort} />
-                <SortableHeader field="repost" label="Repost" currentField={sortField} direction={sortDirection} onSort={onSort} />
-              </>
-            ) : (
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Prix
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {influencers.map((influencer) => (
-            <tr 
-              key={influencer.id}
-              className={multiSelectMode ? 'cursor-pointer hover:bg-gray-50' : ''}
-              onClick={() => {
-                if (multiSelectMode) {
-                  onServiceSelect(influencer, 'follow');
-                }
-              }}
-            >
+    <>
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
               {multiSelectMode && (
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={selectedInfluencers.includes(influencer.id)}
-                    onChange={() => onServiceSelect(influencer, 'follow')}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                  />
-                </td>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sélection
+                </th>
               )}
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <img
-                    src={influencer.profileImage}
-                    alt={influencer.displayName}
-                    className="h-10 w-10 rounded-full"
-                  />
-                  <div className="ml-4">
-                    <div className="flex items-center">
-                      <div className="text-sm font-medium text-gray-900">
-                        {influencer.username}
-                      </div>
-                      {influencer.isVerified && (
-                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Vérifié
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {influencer.category}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {influencer.followers.toLocaleString()}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {influencer.city}, {influencer.country}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {influencer.avgDeliveryTime}h
-              </td>
-              {multiSelectMode ? (
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {influencer.prices.follow?.toFixed(2)} €
-                </td>
-              ) : (
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Influenceur
+              </th>
+              <SortableHeader field="followers" label="Followers" currentField={sortField} direction={sortDirection} onSort={onSort} />
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Localisation
+              </th>
+              {!multiSelectMode ? (
                 <>
-                  <ServiceCell
-                    price={influencer.prices.follow}
-                    icon={UserPlus}
-                    onClick={() => onServiceSelect(influencer, 'follow')}
-                  />
-                  <ServiceCell
-                    price={influencer.prices.like}
-                    icon={Heart}
-                    onClick={() => onServiceSelect(influencer, 'like')}
-                  />
-                  <ServiceCell
-                    price={influencer.prices.comment}
-                    icon={MessageCircle}
-                    onClick={() => onServiceSelect(influencer, 'comment')}
-                  />
-                  <ServiceCell
-                    price={influencer.prices.repost_story}
-                    icon={Share2}
-                    onClick={() => onServiceSelect(influencer, 'repost_story')}
-                  />
+                  <SortableHeader field="follow" label="Follow" currentField={sortField} direction={sortDirection} onSort={onSort} />
+                  <SortableHeader field="like" label="Like" currentField={sortField} direction={sortDirection} onSort={onSort} />
+                  <SortableHeader field="comment" label="Comment" currentField={sortField} direction={sortDirection} onSort={onSort} />
+                  <SortableHeader field="repost" label="Repost" currentField={sortField} direction={sortDirection} onSort={onSort} />
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Favoris
+                  </th>
                 </>
+              ) : (
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Prix
+                </th>
               )}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {influencers.map((influencer) => (
+              <tr 
+                key={influencer.id}
+                className={multiSelectMode ? 'cursor-pointer hover:bg-gray-50' : ''}
+                onClick={() => {
+                  if (multiSelectMode) {
+                    onServiceSelect(influencer, 'follow');
+                  }
+                }}
+              >
+                {multiSelectMode && (
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedInfluencers.includes(influencer.id)}
+                      onChange={() => onServiceSelect(influencer, 'follow')}
+                      className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                    />
+                  </td>
+                )}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <img
+                      src={influencer.profileImage}
+                      alt={influencer.displayName}
+                      className="h-10 w-10 rounded-full cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedInfluencer(influencer);
+                      }}
+                    />
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900 cursor-pointer hover:text-purple-600" onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedInfluencer(influencer);
+                      }}>
+                        {influencer.username}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {influencer.category}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {influencer.followers.toLocaleString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {influencer.city}, {influencer.country}
+                </td>
+                {multiSelectMode ? (
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-baseline space-x-1">
+                      <span className="font-medium">{influencer.prices.follow?.toFixed(2)}€</span>
+                      <span className="text-xs text-gray-500">/ mois</span>
+                    </div>
+                  </td>
+                ) : (
+                  <>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {influencer.prices.follow && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onServiceSelect(influencer, 'follow')}
+                          className="flex items-center space-x-2"
+                        >
+                          <UserPlus className="h-4 w-4" />
+                          <span>{influencer.prices.follow.toFixed(2)} €</span>
+                        </Button>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {influencer.prices.like && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onServiceSelect(influencer, 'like')}
+                          className="flex items-center space-x-2"
+                        >
+                          <Heart className="h-4 w-4" />
+                          <span>{influencer.prices.like.toFixed(2)} €</span>
+                        </Button>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {influencer.prices.comment && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onServiceSelect(influencer, 'comment')}
+                          className="flex items-center space-x-2"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          <span>{influencer.prices.comment.toFixed(2)} €</span>
+                        </Button>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {influencer.prices.repost_story && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onServiceSelect(influencer, 'repost_story')}
+                          className="flex items-center space-x-2"
+                        >
+                          <Share2 className="h-4 w-4" />
+                          <span>{influencer.prices.repost_story.toFixed(2)} €</span>
+                        </Button>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={(e) => handleFavoriteClick(e, influencer)}
+                        className="p-1 rounded-full hover:bg-gray-100"
+                      >
+                        <Heart
+                          className={`h-5 w-5 ${
+                            isFavorite(influencer.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'
+                          }`}
+                        />
+                      </button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-interface ServiceCellProps {
-  price?: number;
-  icon: any;
-  onClick: () => void;
-}
-
-function ServiceCell({ price, icon: Icon, onClick }: ServiceCellProps) {
-  if (!price) return <td className="px-6 py-4 whitespace-nowrap" />;
-  
-  return (
-    <td className="px-6 py-4 whitespace-nowrap">
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={onClick}
-        className="flex items-center space-x-2"
-      >
-        <Icon className="h-4 w-4" />
-        <span>{price.toFixed(2)} €</span>
-      </Button>
-    </td>
+      {selectedInfluencer && (
+        <InfluencerProfileModal
+          isOpen={!!selectedInfluencer}
+          onClose={() => setSelectedInfluencer(null)}
+          influencer={selectedInfluencer}
+        />
+      )}
+    </>
   );
 }

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
-import { Search, UserPlus, Heart, MessageCircle, Share2, History } from 'lucide-react';
+import { Search, UserPlus, Heart, MessageCircle, Share2, History, X } from 'lucide-react';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { useNotifications } from '../lib/notifications';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import * as Dialog from '@radix-ui/react-dialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -32,10 +33,11 @@ interface Subscriber {
     total: number;
     url: string;
   };
+  cancellationReason?: string;
 }
 
-const ServiceIcon = ({ type }: { type: SubscriptionType }) => {
-  switch (type) {
+const ServiceIcon = ({ service }: { service: SubscriptionType }) => {
+  switch (service) {
     case 'follow':
       return <UserPlus className="h-4 w-4" />;
     case 'like':
@@ -72,9 +74,12 @@ export default function MySubscribers() {
   const { addNotification } = useNotifications();
   const [selectedType, setSelectedType] = useState<'all' | SubscriptionType>('all');
   const [search, setSearch] = useState('');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscriber | null>(null);
+  const [cancellationReason, setCancellationReason] = useState('');
 
   // Mock data
-  const [subscribers] = useState<Subscriber[]>([
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([
     {
       id: '1',
       type: 'follow',
@@ -95,29 +100,46 @@ export default function MySubscribers() {
         total: 3,
         url: '/dashboard/proposals?client=client1'
       }
-    },
-    {
-      id: '2',
-      type: 'like',
-      client: {
-        id: 'client2',
-        username: '@business_account2',
-        profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-      },
-      influencer: {
-        id: 'influencer1',
-        username: '@fashion_style',
-        profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop'
-      },
-      price: 2.00,
-      status: 'active',
-      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-      history: {
-        total: 12,
-        url: '/dashboard/proposals?client=client2'
-      }
     }
   ]);
+
+  const handleCancelSubscription = () => {
+    if (!selectedSubscription || !cancellationReason.trim()) {
+      addNotification({
+        type: 'error',
+        message: 'Veuillez indiquer un motif d\'annulation'
+      });
+      return;
+    }
+
+    setSubscribers(subscribers.map(sub => 
+      sub.id === selectedSubscription.id ? {
+        ...sub,
+        status: 'cancelled',
+        cancellationReason
+      } : sub
+    ));
+
+    // Sauvegarder la notification pour le client
+    const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    notifications.push({
+      id: crypto.randomUUID(),
+      type: 'subscription_cancelled',
+      message: `L'abonnement avec ${selectedSubscription.influencer.username} a été annulé. Motif : ${cancellationReason}`,
+      timestamp: new Date(),
+      isRead: false
+    });
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+
+    addNotification({
+      type: 'success',
+      message: 'Abonnement annulé avec succès'
+    });
+
+    setShowCancelModal(false);
+    setSelectedSubscription(null);
+    setCancellationReason('');
+  };
 
   const filteredSubscribers = subscribers.filter(subscriber => {
     if (selectedType !== 'all' && subscriber.type !== selectedType) return false;
@@ -207,6 +229,9 @@ export default function MySubscribers() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Historique
                 </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -246,7 +271,29 @@ export default function MySubscribers() {
                     {subscriber.type === 'follow' ? '/mois' : '/post'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={subscriber.status} />
+                    <div className="flex items-center space-x-2">
+                      <StatusBadge status={subscriber.status} />
+                      {subscriber.cancellationReason && (
+                        <Tooltip.Provider>
+                          <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                              <button className="text-red-500">
+                                <X className="h-4 w-4" />
+                              </button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Portal>
+                              <Tooltip.Content
+                                className="bg-gray-900 text-white px-2 py-1 rounded text-sm"
+                                sideOffset={5}
+                              >
+                                Motif : {subscriber.cancellationReason}
+                                <Tooltip.Arrow className="fill-gray-900" />
+                              </Tooltip.Content>
+                            </Tooltip.Portal>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {format(subscriber.createdAt, 'dd/MM/yyyy', { locale: fr })}
@@ -277,6 +324,21 @@ export default function MySubscribers() {
                       </Tooltip.Root>
                     </Tooltip.Provider>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {subscriber.status === 'active' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => {
+                          setSelectedSubscription(subscriber);
+                          setShowCancelModal(true);
+                        }}
+                      >
+                        Annuler l'abonnement
+                      </Button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -289,6 +351,53 @@ export default function MySubscribers() {
           )}
         </div>
       </div>
+
+      {/* Modal d'annulation */}
+      <Dialog.Root open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
+            <Dialog.Title className="text-lg font-medium text-gray-900 mb-4">
+              Annuler l'abonnement
+            </Dialog.Title>
+            
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Veuillez indiquer le motif de l'annulation. Le client en sera informé.
+              </p>
+
+              <textarea
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                rows={4}
+                placeholder="Motif de l'annulation..."
+                required
+              />
+
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setSelectedSubscription(null);
+                    setCancellationReason('');
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-red-600 hover:text-red-700"
+                  onClick={handleCancelSubscription}
+                >
+                  Confirmer l'annulation
+                </Button>
+              </div>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </DashboardLayout>
   );
 }

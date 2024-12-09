@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Trash2, CheckCircle, MapPin, Calculator, Share2 } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  Calculator,
+  Share2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import Button from "./Button";
 import Input from "./Input";
 import CityInput from "./CityInput";
 import PlatformIcon from "./PlatformIcon";
 import ServiceIcon from "./ServiceIcon";
+import PriceSuggestionModal from "./PriceSuggestionModal";
 import { useNotifications } from "../lib/notifications";
 import {
   Platform,
@@ -16,7 +24,8 @@ import {
   Service,
 } from "../lib/types";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { useAccount } from "../hooks/useAccounts";
+import Switch from "./Switch";
+import { useAccount } from "../lib/hooks/useAccounts";
 
 const formatAccountDataByPlatform = (platform: Platform, data: any) => {
   switch (platform) {
@@ -81,16 +90,16 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
 
 interface AccountCardProps {
   accountId: string;
-  onUpdate: (updates: Partial<SocialAccount>) => void;
   onDelete: () => void;
 }
 
-export default function AccountCard({
-  accountId,
-  onUpdate,
-  onDelete,
-}: AccountCardProps) {
-  const { account, loading: isFetching, error } = useAccount(accountId);
+export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
+  const {
+    account,
+    loading: isFetching,
+    handleUpdateAccount,
+  } = useAccount(accountId);
+  console.log(account);
   const accountData =
     !isFetching && formatAccountDataByPlatform(account.platform, account);
   const { addNotification } = useNotifications();
@@ -112,7 +121,7 @@ export default function AccountCard({
       ? [...(account.availableServices || []), service]
       : (account.availableServices || []).filter((s) => s !== service);
 
-    onUpdate({
+    handleUpdateAccount(accountId, {
       availableServices: updatedServices,
       prices: {
         ...account.prices,
@@ -121,25 +130,10 @@ export default function AccountCard({
     });
   };
 
-  const handleApplyPriceSuggestions = (prices: {
-    like: number;
-    comment: number;
-    repost_story: number;
-    follow: number;
-  }) => {
-    onUpdate({
-      prices: {
-        ...account.prices,
-        like: prices.like,
-        comment: prices.comment,
-        repost_story: prices.repost_story,
-        follow: prices.follow,
-      },
-    });
-  };
-
   const handleShare = async () => {
-    const url = `${window.location.origin}/${account.platform}/${account.username.replace("@", "")}`;
+    const url = `${window.location.origin}/${
+      account.platform
+    }/${account.username.replace("@", "")}`;
     try {
       await navigator.clipboard.writeText(url);
       addNotification({
@@ -153,8 +147,13 @@ export default function AccountCard({
       });
     }
   };
-  // return <div>Loading...</div>;
+
+  const getPriceLabel = (service: Service) => {
+    return service === "follow" ? "/ mois" : "/ post";
+  };
+
   if (isFetching) return <div>Loading...</div>;
+  const canBeVisible = account.availableServices.length > 0;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -171,8 +170,8 @@ export default function AccountCard({
               <div className="flex items-center space-x-2">
                 <PlatformIcon platform={account.platform} className="h-4 w-4" />
                 <Link
-                  to={`/${account.platform}/${account.username.replace("@", "")}`}
-                  className="font-medium text-purple-600 hover:text-purple-700 transition-colors"
+                  to={`/${account.platform}/${account.username}`}
+                  className="font-medium text-purple-600 hover:text-purple-700"
                 >
                   {accountData.username}
                 </Link>
@@ -183,25 +182,9 @@ export default function AccountCard({
               <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
                 <span>{formatFollowers(accountData.followers)} followers</span>
                 <span>•</span>
-                {isEditingLocation ? (
-                  <CityInput
-                    value={accountData.city}
-                    onSelect={(city, country) => {
-                      onUpdate({ city, country });
-                      setIsEditingLocation(false);
-                    }}
-                  />
-                ) : (
-                  <button
-                    onClick={() => setIsEditingLocation(true)}
-                    className="flex items-center hover:text-gray-700"
-                  >
-                    <MapPin className="h-4 w-4 mr-1" />
-                    <span>
-                      {accountData.city}, {accountData.country}
-                    </span>
-                  </button>
-                )}
+                <span>
+                  {accountData.city}, {accountData.country}
+                </span>
               </div>
             </div>
           </div>
@@ -220,7 +203,7 @@ export default function AccountCard({
               onClick={onDelete}
               className="text-gray-500 hover:text-red-600 border-gray-200"
             >
-              <Trash2 className="h-4 w-4" />
+              Supprimer
             </Button>
           </div>
         </div>
@@ -228,49 +211,89 @@ export default function AccountCard({
 
       {/* Content */}
       <div className="p-4 space-y-6">
-        {/* Catégorie et Langue */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Catégorie
-            </label>
-            <select
-              value={accountData.category}
-              onChange={(e) => onUpdate({ category: e.target.value })}
-              className="w-full rounded-md border border-gray-200 p-2 text-sm bg-white"
-              disabled={!account.isVerified}
-            >
-              <option value="">Sélectionner...</option>
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
+        {/* Visibilité */}
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <Switch
+              checked={account.hideIdentity}
+              onChange={(checked) => {
+                if (checked && !canBeVisible) {
+                  addNotification({
+                    type: "error",
+                    message:
+                      "Vous devez avoir au moins un service actif pour être visible dans le catalogue",
+                  });
+                  return;
+                }
+                handleUpdateAccount(accountId, { hideIdentity: checked });
+              }}
+              label={
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    Visible dans le catalogue
+                  </span>
+                  <span
+                    className={`inline-flex h-2 w-2 rounded-full ${
+                      !account.hideIdentity ? "bg-green-400" : "bg-gray-400"
+                    }`}
+                  ></span>
+                </div>
+              }
+            />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Langue
-            </label>
-            <select
-              value={account.language}
-              onChange={(e) => onUpdate({ language: e.target.value })}
-              className="w-full rounded-md border border-gray-200 p-2 text-sm bg-white"
-              disabled={!account.isVerified}
-            >
-              <option value="">Sélectionner...</option>
-              {LANGUAGES.map((language) => (
-                <option key={language} value={language}>
-                  {language}
-                </option>
-              ))}
-            </select>
-          </div>
+
+          <Tooltip.Provider>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <div className="flex items-center justify-between">
+                  <Switch
+                    checked={account.hideProfileImage}
+                    onChange={(checked) =>
+                      handleUpdateAccount(accountId, {
+                        hideProfileImage: checked,
+                      })
+                    }
+                    label={
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium text-gray-700">
+                          Masquer mon identité
+                        </span>
+                        {account.hideProfileImage ? (
+                          <EyeOff className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-gray-400" />
+                        )}
+                      </div>
+                    }
+                  />
+                </div>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content
+                  className="bg-gray-900 text-white px-3 py-2 rounded text-sm max-w-xs"
+                  sideOffset={5}
+                >
+                  Votre compte apparaîtra comme "Compte mystère" dans le
+                  catalogue, sans photo de profil ni informations permettant de
+                  vous identifier. Seules vos statistiques et tarifs seront
+                  visibles.
+                  <Tooltip.Arrow className="fill-gray-900" />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+
+          {!canBeVisible && (
+            <p className="text-sm text-red-600">
+              Vous devez avoir au moins un service actif pour être visible dans
+              le catalogue
+            </p>
+          )}
         </div>
 
         {/* Services */}
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex justify-between mb-2">
             <h4 className="text-xs font-medium text-gray-500">
               Services et tarifs
             </h4>
@@ -286,100 +309,106 @@ export default function AccountCard({
             </Button>
           </div>
           <div className="space-y-2">
-            {["follow", "like", "comment", "repost_story"].map((service) => {
-              const isEnabled = account.availableServices?.includes(
-                service as Service
-              );
-              return (
-                <div
-                  key={service}
-                  className={`flex items-center justify-between p-3 rounded-lg border ${
-                    isEnabled
-                      ? "bg-purple-50 border-purple-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      checked={isEnabled}
-                      onChange={(e) =>
-                        handleServiceToggle(
-                          service as Service,
-                          e.target.checked
-                        )
-                      }
-                      disabled={!account.isVerified}
-                      className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="flex items-center space-x-2">
-                      <ServiceIcon service={service as Service} />
-                      <span className="text-sm font-medium capitalize">
-                        {service}
-                      </span>
-                    </div>
-                  </div>
-                  {isEnabled && (
-                    <div className="flex items-center">
+            {(["follow", "like", "comment", "repost_story"] as Service[]).map(
+              (service) => {
+                const isEnabled = account.availableServices?.includes(service);
+                return (
+                  <div
+                    key={service}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      isEnabled
+                        ? "bg-purple-50 border-purple-200"
+                        : "bg-gray-50 border-gray-200"
+                    } border`}
+                  >
+                    <div className="flex items-center space-x-3">
                       <input
-                        type="number"
-                        value={account.prices[service as Service] || ""}
+                        type="checkbox"
+                        checked={isEnabled}
                         onChange={(e) =>
-                          onUpdate({
-                            prices: {
-                              ...account.prices,
-                              [service]: parseFloat(e.target.value),
-                            },
-                          })
+                          handleServiceToggle(service, e.target.checked)
                         }
-                        className="w-20 p-2 text-sm border rounded-l bg-white"
-                        placeholder="0"
-                        min="0"
-                        step="0.5"
                         disabled={!account.isVerified}
+                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                       />
-                      <span className="px-3 py-2 text-sm bg-gray-100 border border-l-0 rounded-r">
-                        €
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <ServiceIcon service={service} />
+                        <span className="text-sm font-medium capitalize">
+                          {service}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                    {isEnabled && (
+                      <div className="flex items-center">
+                        <input
+                          type="number"
+                          value={account.prices[service] || ""}
+                          onChange={(e) =>
+                            handleUpdateAccount(accountId, {
+                              prices: {
+                                ...account.prices,
+                                [service]: parseFloat(e.target.value),
+                              },
+                            })
+                          }
+                          className="w-20 p-2 text-sm border rounded bg-white"
+                          placeholder="0"
+                          min="0"
+                          step="0.5"
+                          disabled={!account.isVerified}
+                        />
+                        <div className="px-3 py-2 text-sm bg-gray-100 border border-l-0 rounded-r">
+                          €{" "}
+                          <span className="text-xs text-gray-500">
+                            {getPriceLabel(service)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+            )}
           </div>
         </div>
 
-        {/* Visibilité */}
+        {/* Verification Status */}
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={!account.hideIdentity}
-              onChange={(e) => onUpdate({ hideIdentity: !e.target.checked })}
-              disabled={!account.isVerified}
-              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-            />
-            <span className="text-sm text-gray-600">
-              {!account.isVerified ? (
-                <span className="flex items-center text-yellow-600">
-                  <span className="w-2 h-2 rounded-full bg-yellow-400 mr-2"></span>
-                  En attente de vérification
-                </span>
-              ) : !account.hideIdentity ? (
-                <span className="flex items-center text-green-600">
-                  <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
-                  Visible dans le catalogue
-                </span>
-              ) : (
-                <span className="flex items-center text-gray-600">
-                  <span className="w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
-                  Masqué du catalogue
-                </span>
-              )}
-            </span>
+            {!account.isVerified ? (
+              <span className="flex items-center text-yellow-600">
+                <span className="w-2 h-2 rounded-full bg-yellow-400 mr-2"></span>
+                En attente de vérification
+              </span>
+            ) : !account.hideIdentity ? (
+              <span className="flex items-center text-green-600">
+                <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
+                Visible dans le catalogue
+              </span>
+            ) : (
+              <span className="flex items-center text-gray-600">
+                <span className="w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
+                Masqué du catalogue
+              </span>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Modal de suggestion de prix */}
+      <PriceSuggestionModal
+        isOpen={showPriceSuggestions}
+        onClose={() => setShowPriceSuggestions(false)}
+        followers={account.followers}
+        onApply={(prices) => {
+          handleUpdateAccount(accountId, {
+            prices: {
+              ...account.prices,
+              ...prices,
+            },
+          });
+        }}
+      />
     </div>
   );
 }

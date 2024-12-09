@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../lib/notifications';
+import { useAuth } from '../../lib/auth';
 import PackSelection from './PackSelection';
 import PaymentSection from './PaymentSection';
 import BillingSection from './BillingSection';
 import SummarySection from './SummarySection';
+import CustomAmount from '../../components/topup/CustomAmount';
 
 export const PACKS = [
   { id: 1, amount: 50, bonus: 0 },
@@ -19,10 +21,13 @@ interface RechargeSectionProps {
 
 export default function RechargeSection({ onChangeTab }: RechargeSectionProps) {
   const navigate = useNavigate();
+  const { user, updateBalance, updatePendingBalance } = useAuth();
   const { addNotification } = useNotifications();
   const [selectedPack, setSelectedPack] = useState<number | null>(null);
+  const [customAmount, setCustomAmount] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [selectedBillingProfile, setSelectedBillingProfile] = useState<string | null>(null);
+  const [useEarnings, setUseEarnings] = useState(false);
 
   // Charger et sélectionner automatiquement les méthodes par défaut
   useEffect(() => {
@@ -43,7 +48,7 @@ export default function RechargeSection({ onChangeTab }: RechargeSectionProps) {
   }, []);
 
   const handlePayment = async () => {
-    if (!selectedPack || !selectedPaymentMethod || !selectedBillingProfile) {
+    if (!selectedPaymentMethod || !selectedBillingProfile) {
       addNotification({
         type: 'error',
         message: 'Veuillez compléter tous les champs'
@@ -51,42 +56,77 @@ export default function RechargeSection({ onChangeTab }: RechargeSectionProps) {
       return;
     }
 
+    const totalAmount = customAmount ? parseFloat(customAmount) : PACKS.find(p => p.id === selectedPack)?.amount || 0;
+    const earningsToUse = useEarnings ? Math.min(totalAmount, user?.pendingBalance || 0) : 0;
+    const remainingAmount = totalAmount - earningsToUse;
+
     const methods = JSON.parse(localStorage.getItem('payment_methods') || '[]');
     const selectedMethod = methods.find((m: any) => m.id === selectedPaymentMethod);
 
-    if (selectedMethod?.type === 'bank') {
-      addNotification({
-        type: 'success',
-        message: 'Votre demande a été enregistrée. Nous traiterons votre paiement dès réception du virement.'
-      });
-    } else {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      if (earningsToUse > 0) {
+        // Mettre à jour le solde avec les gains
+        updateBalance(earningsToUse);
+        // Mettre à jour les gains en attente
+        updatePendingBalance(-earningsToUse);
+      }
+
+      if (remainingAmount > 0) {
+        if (selectedMethod?.type === 'bank') {
+          addNotification({
+            type: 'success',
+            message: 'Votre demande a été enregistrée. Nous traiterons votre paiement dès réception du virement.'
+          });
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          updateBalance(remainingAmount);
+          addNotification({
+            type: 'success',
+            message: 'Paiement effectué avec succès'
+          });
+        }
+      } else {
         addNotification({
           type: 'success',
-          message: 'Paiement effectué avec succès'
-        });
-        navigate('/dashboard/buy');
-      } catch (error) {
-        addNotification({
-          type: 'error',
-          message: 'Erreur lors du paiement'
+          message: 'Transfert effectué avec succès'
         });
       }
+
+      navigate('/dashboard/buy');
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        message: 'Erreur lors du paiement'
+      });
     }
   };
 
-  const selectedAmount = PACKS.find(p => p.id === selectedPack)?.amount || 0;
+  const selectedAmount = customAmount ? parseFloat(customAmount) : PACKS.find(p => p.id === selectedPack)?.amount || 0;
 
   return (
     <div className="space-y-6">
       <PackSelection
         packs={PACKS}
         selectedPack={selectedPack}
-        onPackSelect={setSelectedPack}
+        onPackSelect={(packId) => {
+          setSelectedPack(packId);
+          setCustomAmount('');
+        }}
       />
 
-      {selectedPack && (
+      <CustomAmount
+        amount={customAmount}
+        onAmountChange={(value) => {
+          setCustomAmount(value);
+          setSelectedPack(null);
+        }}
+        onReset={() => {
+          setCustomAmount('');
+          setSelectedPack(null);
+        }}
+      />
+
+      {(selectedPack || customAmount) && (
         <>
           <PaymentSection
             selectedMethodId={selectedPaymentMethod}
@@ -107,6 +147,8 @@ export default function RechargeSection({ onChangeTab }: RechargeSectionProps) {
               amount={selectedAmount}
               paymentMethodId={selectedPaymentMethod}
               onConfirm={handlePayment}
+              useEarnings={useEarnings}
+              onUseEarningsChange={setUseEarnings}
             />
           )}
         </>

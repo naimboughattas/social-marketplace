@@ -32,6 +32,15 @@ interface Proposal {
   proofImage?: File;
   proofUrl?: string;
   refusalReason?: string;
+  isCampaign?: boolean;
+  campaignDetails?: {
+    id: string;
+    title: string;
+    category: string;
+    country: string;
+    city: string;
+    language: string;
+  };
 }
 
 // Mock data - Numéros de commande dans l'ordre décroissant
@@ -100,6 +109,26 @@ export const mockOrders: Order[] = [
 ];
 
 export const mockProposals: Proposal[] = [
+  {
+    id: '7',
+    orderNumber: 7,
+    date: new Date(),
+    platform: 'instagram',
+    client: '@business_account7',
+    service: 'like',
+    target: 'https://instagram.com/p/xyz',
+    price: 2.00,
+    status: 'pending',
+    isCampaign: true,
+    campaignDetails: {
+      id: 'camp-123',
+      title: 'Campagne Mode Été 2024',
+      category: 'Fashion',
+      country: 'France',
+      city: 'Paris',
+      language: 'French'
+    }
+  },
   {
     id: '6',
     orderNumber: 6,

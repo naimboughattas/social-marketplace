@@ -1,268 +1,343 @@
 import { useState } from 'react';
 import { Tab } from '@headlessui/react';
-import AdminLayout from '../../components/admin/AdminLayout';
 import { Card, Title, TextInput, Select, SelectItem } from '@tremor/react';
-import { Search, MessageSquare, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Search, MessageSquare, Shield, Ban } from 'lucide-react';
 import Button from '../../components/Button';
 import { cn } from '../../lib/utils';
-import { formatDate } from '../../lib/utils';
+import { Platform, PLATFORMS, PLATFORM_LABELS } from '../../lib/types';
+import { useNotifications } from '../../lib/notifications';
+import PlatformIcon from '../../components/PlatformIcon';
+import AdminLayout from '../../components/admin/AdminLayout';
 
-interface Ticket {
+interface SuspendedAccount {
   id: string;
-  userId: string;
-  userEmail: string;
-  subject: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high';
-  category: string;
-  createdAt: Date;
-  lastUpdate: Date;
-  messages: {
-    id: string;
-    sender: 'user' | 'admin';
-    content: string;
-    timestamp: Date;
-  }[];
+  username: string;
+  platform: Platform;
+  email: string;
+  reason: string;
+  suspendedAt: Date;
+  suspendedBy: string;
 }
 
-const mockTickets: Ticket[] = [
-  {
-    id: '1',
-    userId: 'user1',
-    userEmail: 'user@example.com',
-    subject: 'Problème de paiement',
-    status: 'open',
-    priority: 'high',
-    category: 'payment',
-    createdAt: new Date(Date.now() - 86400000),
-    lastUpdate: new Date(Date.now() - 3600000),
-    messages: [
-      {
-        id: '1',
-        sender: 'user',
-        content: 'Mon paiement est bloqué depuis hier',
-        timestamp: new Date(Date.now() - 86400000)
-      }
-    ]
-  }
-  // ... autres tickets
-];
-
-const statusStyles = {
-  open: 'bg-yellow-100 text-yellow-800',
-  in_progress: 'bg-blue-100 text-blue-800',
-  resolved: 'bg-green-100 text-green-800',
-  closed: 'bg-gray-100 text-gray-800'
-};
-
-const priorityStyles = {
-  low: 'bg-green-100 text-green-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-red-100 text-red-800'
-};
-
 export default function AdminSupport() {
-  const [tickets] = useState(mockTickets);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [message, setMessage] = useState('');
+  const { addNotification } = useNotifications();
+  const [selectedTab, setSelectedTab] = useState(0);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [platform, setPlatform] = useState<Platform | 'all'>('all');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [reason, setReason] = useState('');
+  const [showSuspendForm, setShowSuspendForm] = useState(false);
 
-  const filteredTickets = tickets.filter(ticket => {
-    if (search && !ticket.subject.toLowerCase().includes(search.toLowerCase()) &&
-        !ticket.userEmail.toLowerCase().includes(search.toLowerCase())) {
+  // Mock data for suspended accounts
+  const [suspendedAccounts, setSuspendedAccounts] = useState<SuspendedAccount[]>([
+    {
+      id: '1',
+      username: '@suspended_user',
+      platform: 'instagram',
+      email: 'suspended@example.com',
+      reason: 'Violation des conditions d\'utilisation',
+      suspendedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      suspendedBy: 'admin@example.com'
+    }
+  ]);
+
+  const handleSuspendAccount = () => {
+    if (!username || !platform || platform === 'all' || !reason) {
+      addNotification({
+        type: 'error',
+        message: 'Veuillez remplir tous les champs requis'
+      });
+      return;
+    }
+
+    const newAccount: SuspendedAccount = {
+      id: crypto.randomUUID(),
+      username,
+      platform,
+      email: email || 'Non spécifié',
+      reason,
+      suspendedAt: new Date(),
+      suspendedBy: 'admin@example.com'
+    };
+
+    setSuspendedAccounts([newAccount, ...suspendedAccounts]);
+    setShowSuspendForm(false);
+    setUsername('');
+    setEmail('');
+    setPlatform('all');
+    setReason('');
+
+    addNotification({
+      type: 'success',
+      message: 'Compte suspendu avec succès'
+    });
+  };
+
+  const handleUnsuspendAccount = (id: string) => {
+    setSuspendedAccounts(suspendedAccounts.filter(account => account.id !== id));
+    addNotification({
+      type: 'success',
+      message: 'Compte réactivé avec succès'
+    });
+  };
+
+  const filteredAccounts = suspendedAccounts.filter(account => {
+    if (search && !account.username.toLowerCase().includes(search.toLowerCase()) &&
+        !account.email.toLowerCase().includes(search.toLowerCase())) {
       return false;
     }
-    if (statusFilter !== 'all' && ticket.status !== statusFilter) return false;
-    if (priorityFilter !== 'all' && ticket.priority !== priorityFilter) return false;
-    if (categoryFilter !== 'all' && ticket.category !== categoryFilter) return false;
     return true;
   });
-
-  const handleSendMessage = () => {
-    if (!message.trim() || !selectedTicket) return;
-    // Add message logic here
-    setMessage('');
-  };
-
-  const handleUpdateStatus = (ticketId: string, status: 'open' | 'in_progress' | 'resolved' | 'closed') => {
-    // Update status logic here
-  };
-
-  const handleUpdatePriority = (ticketId: string, priority: 'low' | 'medium' | 'high') => {
-    // Update priority logic here
-  };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div>
           <Title>Support</Title>
-          <div className="flex space-x-4">
-            <TextInput
-              icon={Search}
-              placeholder="Rechercher un ticket..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="open">Ouverts</SelectItem>
-              <SelectItem value="in_progress">En cours</SelectItem>
-              <SelectItem value="resolved">Résolus</SelectItem>
-              <SelectItem value="closed">Fermés</SelectItem>
-            </Select>
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectItem value="all">Toutes les priorités</SelectItem>
-              <SelectItem value="low">Basse</SelectItem>
-              <SelectItem value="medium">Moyenne</SelectItem>
-              <SelectItem value="high">Haute</SelectItem>
-            </Select>
-          </div>
+          <p className="mt-1 text-sm text-gray-500">
+            Gérez le support client et la modération
+          </p>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
-          {/* Liste des tickets */}
-          <div className="col-span-4">
-            <Card>
-              <div className="space-y-4">
-                {filteredTickets.map((ticket) => (
-                  <button
-                    key={ticket.id}
-                    onClick={() => setSelectedTicket(ticket)}
-                    className={cn(
-                      'w-full p-4 text-left rounded-lg border transition-colors',
-                      selectedTicket?.id === ticket.id
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200 hover:border-purple-200'
-                    )}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{ticket.subject}</h3>
-                        <p className="text-sm text-gray-500">{ticket.userEmail}</p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className={cn(
-                          'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                          statusStyles[ticket.status]
-                        )}>
-                          {ticket.status}
-                        </span>
-                        <span className={cn(
-                          'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                          priorityStyles[ticket.priority]
-                        )}>
-                          {ticket.priority}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-sm text-gray-500">
-                      {formatDate(ticket.lastUpdate)}
-                    </div>
-                  </button>
-                ))}
+        <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
+          <Tab.List className="flex space-x-1 rounded-xl bg-purple-100 p-1">
+            <Tab
+              className={({ selected }) =>
+                cn(
+                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2',
+                  selected
+                    ? 'bg-white text-purple-700 shadow'
+                    : 'text-purple-600 hover:bg-white/[0.12] hover:text-purple-800'
+                )
+              }
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <MessageSquare className="h-4 w-4" />
+                <span>Tickets</span>
               </div>
-            </Card>
-          </div>
+            </Tab>
+            <Tab
+              className={({ selected }) =>
+                cn(
+                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2',
+                  selected
+                    ? 'bg-white text-purple-700 shadow'
+                    : 'text-purple-600 hover:bg-white/[0.12] hover:text-purple-800'
+                )
+              }
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <Shield className="h-4 w-4" />
+                <span>Modération</span>
+              </div>
+            </Tab>
+            <Tab
+              className={({ selected }) =>
+                cn(
+                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2',
+                  selected
+                    ? 'bg-white text-purple-700 shadow'
+                    : 'text-purple-600 hover:bg-white/[0.12] hover:text-purple-800'
+                )
+              }
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <Ban className="h-4 w-4" />
+                <span>Comptes suspendus</span>
+              </div>
+            </Tab>
+          </Tab.List>
 
-          {/* Détails du ticket */}
-          <div className="col-span-8">
-            {selectedTicket ? (
+          <Tab.Panels className="mt-4">
+            {/* Tickets Panel */}
+            <Tab.Panel>
               <Card>
-                <div className="space-y-6">
-                  {/* En-tête */}
-                  <div className="flex justify-between items-start border-b pb-4">
-                    <div>
-                      <h2 className="text-xl font-medium text-gray-900">
-                        {selectedTicket.subject}
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        {selectedTicket.userEmail} • {formatDate(selectedTicket.createdAt)}
-                      </p>
-                    </div>
-                    <div className="flex space-x-4">
-                      <Select
-                        value={selectedTicket.priority}
-                        onValueChange={(value) => handleUpdatePriority(selectedTicket.id, value as any)}
-                      >
-                        <SelectItem value="low">Basse</SelectItem>
-                        <SelectItem value="medium">Moyenne</SelectItem>
-                        <SelectItem value="high">Haute</SelectItem>
-                      </Select>
-                      <Select
-                        value={selectedTicket.status}
-                        onValueChange={(value) => handleUpdateStatus(selectedTicket.id, value as any)}
-                      >
-                        <SelectItem value="open">Ouvert</SelectItem>
-                        <SelectItem value="in_progress">En cours</SelectItem>
-                        <SelectItem value="resolved">Résolu</SelectItem>
-                        <SelectItem value="closed">Fermé</SelectItem>
-                      </Select>
-                    </div>
-                  </div>
+                <div className="text-center py-12">
+                  <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    Gestion des tickets
+                  </h3>
+                </div>
+              </Card>
+            </Tab.Panel>
 
-                  {/* Messages */}
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {selectedTicket.messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={cn(
-                          'flex',
-                          msg.sender === 'admin' ? 'justify-end' : 'justify-start'
-                        )}
-                      >
-                        <div className={cn(
-                          'max-w-[80%] rounded-lg p-4',
-                          msg.sender === 'admin'
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-100'
-                        )}>
-                          <p>{msg.content}</p>
-                          <p className={cn(
-                            'text-xs mt-1',
-                            msg.sender === 'admin' ? 'text-purple-200' : 'text-gray-500'
-                          )}>
-                            {formatDate(msg.timestamp)}
-                          </p>
+            {/* Moderation Panel */}
+            <Tab.Panel>
+              <Card>
+                <div className="text-center py-12">
+                  <Shield className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    Modération du contenu
+                  </h3>
+                </div>
+              </Card>
+            </Tab.Panel>
+
+            {/* Suspended Accounts Panel */}
+            <Tab.Panel>
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-4">
+                    <TextInput
+                      icon={Search}
+                      placeholder="Rechercher un compte..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={() => setShowSuspendForm(true)}>
+                    <Ban className="h-4 w-4 mr-2" />
+                    Suspendre un compte
+                  </Button>
+                </div>
+
+                {showSuspendForm && (
+                  <Card>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Plateforme
+                          </label>
+                          <Select
+                            value={platform}
+                            onValueChange={(value) => setPlatform(value as Platform)}
+                          >
+                            <SelectItem value="all">Sélectionner une plateforme</SelectItem>
+                            {PLATFORMS.map((p) => (
+                              <SelectItem key={p} value={p}>
+                                {PLATFORM_LABELS[p]}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Nom d'utilisateur
+                          </label>
+                          <TextInput
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="@username"
+                          />
                         </div>
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Input */}
-                  <div className="flex space-x-4">
-                    <TextInput
-                      placeholder="Votre réponse..."
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button onClick={handleSendMessage}>
-                      Envoyer
-                    </Button>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Email (optionnel)
+                        </label>
+                        <TextInput
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="email@exemple.com"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Motif de la suspension
+                        </label>
+                        <textarea
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                          rows={3}
+                          placeholder="Raison de la suspension..."
+                        />
+                      </div>
+
+                      <div className="flex justify-end space-x-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowSuspendForm(false)}
+                        >
+                          Annuler
+                        </Button>
+                        <Button onClick={handleSuspendAccount}>
+                          Suspendre le compte
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                <Card>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Plateforme
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Utilisateur
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Motif
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredAccounts.map((account) => (
+                          <tr key={account.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <PlatformIcon platform={account.platform} />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {account.username}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {account.email}
+                            </td>
+                            <td className="px-6 py-4">
+                              {account.reason}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {account.suspendedAt.toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUnsuspendAccount(account.id)}
+                              >
+                                Réactiver
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {filteredAccounts.length === 0 && (
+                      <div className="text-center py-12">
+                        <Ban className="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">
+                          Aucun compte suspendu
+                        </h3>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </Card>
-            ) : (
-              <Card>
-                <div className="h-96 flex items-center justify-center">
-                  <div className="text-center">
-                    <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">
-                      Aucun ticket sélectionné
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Sélectionnez un ticket pour voir les détails
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            )}
-          </div>
-        </div>
+                </Card>
+              </div>
+            </Tab.Panel>
+          </Tab.Panels>
+        </Tab.Group>
       </div>
     </AdminLayout>
   );

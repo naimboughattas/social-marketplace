@@ -1,106 +1,78 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Platform, SocialAccount } from '../lib/types';
-import { getInfluencers } from '../lib/firebase/influencers';
-import { useNotifications } from '../lib/notifications';
-import { is } from 'date-fns/locale';
+import { useFavorites } from '../lib/favorites';
 
 interface Filters {
   category: string;
   language: string;
   country: string;
+  city: string;
   minFollowers: string;
   maxFollowers: string;
   minPrice: string;
   maxPrice: string;
+  showOnlyFavorites: boolean;
+  hideCollaborators: boolean;
 }
 
 const defaultFilters: Filters = {
   category: '',
   language: '',
   country: '',
+  city: '',
   minFollowers: '',
   maxFollowers: '',
   minPrice: '',
-  maxPrice: ''
+  maxPrice: '',
+  showOnlyFavorites: false,
+  hideCollaborators: false
 };
 
 export function useInfluencerFilters(
-  initialInfluencers: SocialAccount[],
+  influencers: SocialAccount[],
   platform: Platform,
   search: string
 ) {
-  const { addNotification } = useNotifications();
   const [filters, setFilters] = useState<Filters>(defaultFilters);
-  const [filteredInfluencers, setFilteredInfluencers] = useState<SocialAccount[]>(initialInfluencers);
-  const [loading, setLoading] = useState(false);
+  const { favorites } = useFavorites();
 
   const resetFilters = () => setFilters(defaultFilters);
 
-  useEffect(() => {
-    const applyFilters = async () => {
-      try {
-        setLoading(true);
-        
-        // Construct filter object for Firebase query
-        const filterParams: any = {
-          platform,
-          ...(filters.category && { category: filters.category }),
-          ...(filters.language && { language: filters.language }),
-          ...(filters.country && { country: filters.country }),
-          ...(filters.minFollowers && { minFollowers: parseInt(filters.minFollowers) }),
-          ...(filters.maxFollowers && { maxFollowers: parseInt(filters.maxFollowers) }),
-          isVerified: true
-          
-        };
+  const filteredInfluencers = influencers.filter(influencer => {
+    if (influencer.platform !== platform) return false;
+    if (search && !influencer.username.toLowerCase().includes(search.toLowerCase())) {
+      return false;
+    }
+    
+    if (filters.category && influencer.category !== filters.category) return false;
+    if (filters.language && influencer.language !== filters.language) return false;
+    if (filters.country && influencer.country !== filters.country) return false;
+    if (filters.city && influencer.city !== filters.city) return false;
+    if (filters.minFollowers && influencer.followers < parseInt(filters.minFollowers)) return false;
+    if (filters.maxFollowers && influencer.followers > parseInt(filters.maxFollowers)) return false;
+    
+    const minPrice = parseFloat(filters.minPrice);
+    const maxPrice = parseFloat(filters.maxPrice);
+    const prices = Object.values(influencer.prices).filter(p => p !== undefined);
+    const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+    
+    if (!isNaN(minPrice) && avgPrice < minPrice) return false;
+    if (!isNaN(maxPrice) && avgPrice > maxPrice) return false;
 
-        // Get filtered influencers from Firebase
-        const results = await getInfluencers(filterParams);
-
-        // Apply client-side filters that can't be done in Firebase
-        let filtered = results;
-
-        // Apply search filter
-        if (search) {
-          filtered = filtered.filter(inf =>
-            inf.username.toLowerCase().includes(search.toLowerCase()) ||
-            inf.displayName.toLowerCase().includes(search.toLowerCase())
-          );
-        }
-
-        // Apply price filters
-        if (filters.minPrice || filters.maxPrice) {
-          filtered = filtered.filter(inf => {
-            const prices = Object.values(inf.prices).filter(p => p !== undefined);
-            if (prices.length === 0) return false;
-            
-            const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
-            
-            if (filters.minPrice && avgPrice < parseFloat(filters.minPrice)) return false;
-            if (filters.maxPrice && avgPrice > parseFloat(filters.maxPrice)) return false;
-            
-            return true;
-          });
-        }
-
-        setFilteredInfluencers(filtered);
-      } catch (error) {
-        addNotification({
-          type: 'error',
-          message: 'Erreur lors de l\'application des filtres'
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    applyFilters();
-  }, [platform, filters, search, initialInfluencers]);
+    if (filters.showOnlyFavorites && !favorites.some(f => f.id === influencer.id)) return false;
+    
+    // TODO: Implement hideCollaborators filter when collaboration history is available
+    if (filters.hideCollaborators) {
+      // Check if influencer is in past collaborations
+    }
+    
+    return true;
+  });
 
   return {
     filters,
     setFilters,
     resetFilters,
-    filteredInfluencers,
-    loading
+    filteredInfluencers
   };
 }

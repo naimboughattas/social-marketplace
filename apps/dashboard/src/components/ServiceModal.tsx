@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Grid, Link as LinkIcon, Info } from 'lucide-react';
+import { X, Info } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import Button from './Button';
@@ -10,6 +10,7 @@ import { useCart } from '../lib/cart';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import CommentOptions from './comment/CommentOptions';
 import PostSelection from './post/PostSelection';
+import ServiceIcon from './ServiceIcon';
 
 interface ServiceModalProps {
   isOpen: boolean;
@@ -19,16 +20,9 @@ interface ServiceModalProps {
 }
 
 type Step = 'type' | 'username' | 'comment' | 'posts';
-type InteractionType = 'specific' | 'monthly' | 'specific-future' | 'future';
+type InteractionType = 'specific' | 'monthly' | 'specific-future' | 'future' | 'one-month';
 type CommentType = 'custom' | 'delegated';
 type CommentLength = 'emoji' | 'short' | 'medium' | 'long';
-
-const MOCK_POSTS = [
-  { id: '1', url: 'https://instagram.com/p/123', thumbnail: 'https://picsum.photos/300/300?random=1' },
-  { id: '2', url: 'https://instagram.com/p/456', thumbnail: 'https://picsum.photos/300/300?random=2' },
-  { id: '3', url: 'https://instagram.com/p/789', thumbnail: 'https://picsum.photos/300/300?random=3' },
-  { id: '4', url: 'https://instagram.com/p/012', thumbnail: 'https://picsum.photos/300/300?random=4' },
-];
 
 export default function ServiceModal({
   isOpen,
@@ -39,7 +33,7 @@ export default function ServiceModal({
   const { addNotification } = useNotifications();
   const { addItem } = useCart();
   const [step, setStep] = useState<Step>('type');
-  const [interactionType, setInteractionType] = useState<InteractionType>('specific');
+  const [interactionType, setInteractionType] = useState<InteractionType>(service === 'follow' ? 'one-month' : 'specific');
   const [targetHandle, setTargetHandle] = useState('');
   const [commentType, setCommentType] = useState<CommentType>('custom');
   const [commentText, setCommentText] = useState('');
@@ -51,7 +45,7 @@ export default function ServiceModal({
 
   const resetForm = () => {
     setStep('type');
-    setInteractionType('specific');
+    setInteractionType(service === 'follow' ? 'one-month' : 'specific');
     setTargetHandle('');
     setCommentType('custom');
     setCommentText('');
@@ -60,6 +54,26 @@ export default function ServiceModal({
     setShowPostSelection(true);
     setSelectedPosts([]);
     setPostUrl('');
+  };
+
+  const getPriceDisplay = (type: InteractionType) => {
+    const price = influencer.prices[service];
+    if (service === 'follow') {
+      return {
+        price: `${price.toFixed(2)}€`,
+        label: type === 'monthly' ? '/ mois' : 'pour 1 mois'
+      };
+    }
+    switch (type) {
+      case 'specific':
+        return { price: `${price.toFixed(2)}€`, label: '/ post' };
+      case 'specific-future':
+        return { price: `${price.toFixed(2)}€`, label: '/ posts & futurs posts' };
+      case 'future':
+        return { price: `${price.toFixed(2)}€`, label: '/ futurs posts' };
+      default:
+        return { price: `${price.toFixed(2)}€`, label: '/ post' };
+    }
   };
 
   const handleNext = () => {
@@ -75,20 +89,11 @@ export default function ServiceModal({
       }
       if (service === 'follow') {
         handleSubmit();
-      } else if (service === 'comment') {
-        setStep('comment');
+      } else if (interactionType === 'future') {
+        handleSubmit();
       } else {
         setStep('posts');
       }
-    } else if (step === 'comment') {
-      if (commentType === 'custom' && !commentText) {
-        addNotification({
-          type: 'error',
-          message: 'Veuillez entrer un commentaire'
-        });
-        return;
-      }
-      setStep('posts');
     } else if (step === 'posts') {
       if (!showPostSelection && !postUrl) {
         addNotification({
@@ -101,6 +106,19 @@ export default function ServiceModal({
         addNotification({
           type: 'error',
           message: 'Veuillez sélectionner au moins un post'
+        });
+        return;
+      }
+      if (service === 'comment') {
+        setStep('comment');
+      } else {
+        handleSubmit();
+      }
+    } else if (step === 'comment') {
+      if (commentType === 'custom' && !commentText) {
+        addNotification({
+          type: 'error',
+          message: 'Veuillez entrer un commentaire'
         });
         return;
       }
@@ -130,6 +148,7 @@ export default function ServiceModal({
         service,
         price: influencer.prices[service] || 0,
         targetHandle: finalTarget,
+        postUrl: finalTarget,
         commentText: finalCommentText,
         isFuturePosts: interactionType === 'future' || interactionType === 'specific-future',
         isRecurring: service === 'follow' && interactionType === 'monthly'
@@ -154,14 +173,25 @@ export default function ServiceModal({
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-2xl">
           <div className="flex justify-between items-center mb-6">
-            <Dialog.Title className="text-lg font-medium">
-              {service === 'follow' ? 'Être suivi par' : 
-               service === 'like' ? 'Obtenir un like de' :
-               service === 'comment' ? 'Obtenir un commentaire de' :
-               'Obtenir un repost de'} {influencer.username}
-            </Dialog.Title>
+            <div className="flex items-center space-x-3">
+              <ServiceIcon service={service} />
+              <Dialog.Title className="text-lg font-medium">
+                {service === 'follow' ? 'Être suivi par' : 
+                 service === 'like' ? 'Obtenir un like de' :
+                 service === 'comment' ? 'Obtenir un commentaire de' :
+                 'Obtenir un repost de'} {influencer.username}
+              </Dialog.Title>
+              <div className="flex items-baseline space-x-1">
+                <span className="text-lg font-medium text-purple-600">
+                  {getPriceDisplay(interactionType).price}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {getPriceDisplay(interactionType).label}
+                </span>
+              </div>
+            </div>
             <button onClick={onClose}>
               <X className="h-6 w-6 text-gray-400" />
             </button>
@@ -215,13 +245,21 @@ export default function ServiceModal({
                             <div className="h-2.5 w-2.5 rounded-full bg-purple-600" />
                           </RadioGroup.Indicator>
                         </div>
-                        <div className="ml-3">
-                          <label className="font-medium text-gray-900">
-                            {type.title}
-                          </label>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {type.description}
-                          </p>
+                        <div className="ml-3 flex-1">
+                          <div className="flex items-center justify-between">
+                            <label className="font-medium text-gray-900">
+                              {type.title}
+                            </label>
+                            <div className="flex items-baseline space-x-1">
+                              <span className="font-medium text-purple-600">
+                                {getPriceDisplay(type.id as InteractionType).price}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                {getPriceDisplay(type.id as InteractionType).label}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">{type.description}</p>
                           {type.id === 'future' && (
                             <div className="flex items-center mt-1">
                               <Tooltip.Provider>
@@ -265,6 +303,17 @@ export default function ServiceModal({
               </div>
             )}
 
+            {step === 'posts' && (
+              <PostSelection
+                showPostSelection={showPostSelection}
+                selectedPosts={selectedPosts}
+                postUrl={postUrl}
+                onShowPostSelectionChange={setShowPostSelection}
+                onSelectedPostsChange={setSelectedPosts}
+                onPostUrlChange={setPostUrl}
+              />
+            )}
+
             {step === 'comment' && (
               <CommentOptions
                 commentType={commentType}
@@ -278,37 +327,37 @@ export default function ServiceModal({
               />
             )}
 
-            {step === 'posts' && (
-              <PostSelection
-                showPostSelection={showPostSelection}
-                selectedPosts={selectedPosts}
-                postUrl={postUrl}
-                onShowPostSelectionChange={setShowPostSelection}
-                onSelectedPostsChange={setSelectedPosts}
-                onPostUrlChange={setPostUrl}
-              />
-            )}
-
             <div className="flex justify-end space-x-3 pt-4 border-t">
-              {step !== 'type' && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const prevSteps: Record<Step, Step> = {
-                      type: 'type',
-                      username: 'type',
-                      comment: 'username',
-                      posts: 'comment'
-                    };
-                    setStep(prevSteps[step]);
-                  }}
-                >
-                  Retour
-                </Button>
+              {step === 'type' ? (
+                <>
+                  <Button variant="outline" onClick={onClose}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleNext}>
+                    Continuer
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const prevSteps: Record<Step, Step> = {
+                        type: 'type',
+                        username: 'type',
+                        comment: 'posts',
+                        posts: 'username'
+                      };
+                      setStep(prevSteps[step]);
+                    }}
+                  >
+                    Retour
+                  </Button>
+                  <Button onClick={handleNext}>
+                    {step === 'posts' || (service === 'follow' && step === 'username') || step === 'comment' ? 'Confirmer' : 'Continuer'}
+                  </Button>
+                </>
               )}
-              <Button onClick={handleNext}>
-                {step === 'comment' || (service === 'follow' && step === 'username') ? 'Confirmer' : 'Continuer'}
-              </Button>
             </div>
           </div>
         </Dialog.Content>

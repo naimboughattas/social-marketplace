@@ -1,21 +1,22 @@
-import { useState } from 'react';
-import { Search, MessageSquare, Plus } from 'lucide-react';
-import DashboardLayout from '../components/DashboardLayout';
-import Input from '../components/Input';
-import Button from '../components/Button';
-import { formatDate } from '../lib/utils';
-import { useNotifications } from '../lib/notifications';
+import { useState } from "react";
+import { Search, MessageSquare, Plus } from "lucide-react";
+import DashboardLayout from "../components/DashboardLayout";
+import Input from "../components/Input";
+import Button from "../components/Button";
+import { formatDate } from "../lib/utils";
+import { useNotifications } from "../lib/notifications";
+import { useTickets } from "../lib/hooks/useTickets";
 
 interface Ticket {
   id: string;
   subject: string;
-  status: 'open' | 'closed';
-  priority: 'low' | 'medium' | 'high';
+  status: "open" | "closed";
+  priority: "low" | "medium" | "high";
   createdAt: Date;
   lastUpdate: Date;
   messages: {
     id: string;
-    sender: 'user' | 'support';
+    sender: "user" | "support";
     content: string;
     timestamp: Date;
   }[];
@@ -23,83 +24,87 @@ interface Ticket {
 
 const mockTickets: Ticket[] = [
   {
-    id: '1',
-    subject: 'Question sur le système de paiement',
-    status: 'open',
-    priority: 'medium',
+    id: "1",
+    subject: "Question sur le système de paiement",
+    status: "open",
+    priority: "medium",
     createdAt: new Date(Date.now() - 86400000),
     lastUpdate: new Date(Date.now() - 3600000),
     messages: [
       {
-        id: '1',
-        sender: 'user',
-        content: 'Bonjour, j\'aimerais savoir comment fonctionne le système de paiement automatique ?',
-        timestamp: new Date(Date.now() - 86400000)
+        id: "1",
+        sender: "user",
+        content:
+          "Bonjour, j'aimerais savoir comment fonctionne le système de paiement automatique ?",
+        timestamp: new Date(Date.now() - 86400000),
       },
       {
-        id: '2',
-        sender: 'support',
-        content: 'Bonjour ! Le système de paiement automatique permet de recharger automatiquement votre compte lorsque votre solde passe sous un certain seuil. Vous pouvez configurer ce seuil et le montant de rechargement dans vos paramètres.',
-        timestamp: new Date(Date.now() - 3600000)
-      }
-    ]
+        id: "2",
+        sender: "support",
+        content:
+          "Bonjour ! Le système de paiement automatique permet de recharger automatiquement votre compte lorsque votre solde passe sous un certain seuil. Vous pouvez configurer ce seuil et le montant de rechargement dans vos paramètres.",
+        timestamp: new Date(Date.now() - 3600000),
+      },
+    ],
   },
   {
-    id: '2',
-    subject: 'Problème de vérification de compte',
-    status: 'closed',
-    priority: 'high',
+    id: "2",
+    subject: "Problème de vérification de compte",
+    status: "closed",
+    priority: "high",
     createdAt: new Date(Date.now() - 172800000),
     lastUpdate: new Date(Date.now() - 86400000),
     messages: [
       {
-        id: '3',
-        sender: 'user',
-        content: 'Je n\'arrive pas à valider mon compte Instagram, le code ne fonctionne pas.',
-        timestamp: new Date(Date.now() - 172800000)
+        id: "3",
+        sender: "user",
+        content:
+          "Je n'arrive pas à valider mon compte Instagram, le code ne fonctionne pas.",
+        timestamp: new Date(Date.now() - 172800000),
       },
       {
-        id: '4',
-        sender: 'support',
-        content: 'Nous avons résolu le problème. Vous pouvez maintenant réessayer la vérification.',
-        timestamp: new Date(Date.now() - 86400000)
-      }
-    ]
-  }
+        id: "4",
+        sender: "support",
+        content:
+          "Nous avons résolu le problème. Vous pouvez maintenant réessayer la vérification.",
+        timestamp: new Date(Date.now() - 86400000),
+      },
+    ],
+  },
 ];
 
 const priorityStyles = {
-  low: 'bg-green-100 text-green-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-red-100 text-red-800'
+  low: "bg-green-100 text-green-800",
+  medium: "bg-yellow-100 text-yellow-800",
+  high: "bg-red-100 text-red-800",
 };
 
 const priorityLabels = {
-  low: 'Basse',
-  medium: 'Moyenne',
-  high: 'Haute'
+  low: "Basse",
+  medium: "Moyenne",
+  high: "Haute",
 };
 
 const statusStyles = {
-  open: 'bg-purple-100 text-purple-800',
-  closed: 'bg-gray-100 text-gray-800'
+  open: "bg-purple-100 text-purple-800",
+  closed: "bg-gray-100 text-gray-800",
 };
 
 const statusLabels = {
-  open: 'Ouvert',
-  closed: 'Fermé'
+  open: "Ouvert",
+  closed: "Fermé",
 };
 
 export default function Messages() {
   const { addNotification } = useNotifications();
-  const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
+  const { tickets, handleUpdateTicket } = useTickets();
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [search, setSearch] = useState('');
-  const [message, setMessage] = useState('');
+  const [search, setSearch] = useState("");
+  const [message, setMessage] = useState("");
   const [showNewTicket, setShowNewTicket] = useState(false);
-  const [newTicketSubject, setNewTicketSubject] = useState('');
+  const [newTicketSubject, setNewTicketSubject] = useState("");
 
-  const filteredTickets = tickets.filter(ticket =>
+  const filteredTickets = tickets.filter((ticket) =>
     ticket.subject.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -108,35 +113,35 @@ export default function Messages() {
 
     const newMessage = {
       id: crypto.randomUUID(),
-      sender: 'user' as const,
+      sender: "user" as const,
       content: message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    const updatedTickets = tickets.map(ticket => {
+    const updatedTickets = tickets.map((ticket) => {
       if (ticket.id === selectedTicket.id) {
         return {
           ...ticket,
           messages: [...ticket.messages, newMessage],
-          lastUpdate: new Date()
+          lastUpdate: new Date(),
         };
       }
       return ticket;
     });
 
-    setTickets(updatedTickets);
-    setMessage('');
+    handleUpdateTicket(user.id, updatedTickets);
+    setMessage("");
     addNotification({
-      type: 'success',
-      message: 'Message envoyé'
+      type: "success",
+      message: "Message envoyé",
     });
   };
 
   const handleCreateTicket = () => {
     if (!newTicketSubject.trim()) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez entrer un sujet'
+        type: "error",
+        message: "Veuillez entrer un sujet",
       });
       return;
     }
@@ -144,20 +149,20 @@ export default function Messages() {
     const newTicket: Ticket = {
       id: crypto.randomUUID(),
       subject: newTicketSubject,
-      status: 'open',
-      priority: 'medium',
+      status: "open",
+      priority: "medium",
       createdAt: new Date(),
       lastUpdate: new Date(),
-      messages: []
+      messages: [],
     };
 
     setTickets([newTicket, ...tickets]);
-    setNewTicketSubject('');
+    setNewTicketSubject("");
     setShowNewTicket(false);
     setSelectedTicket(newTicket);
     addNotification({
-      type: 'success',
-      message: 'Ticket créé avec succès'
+      type: "success",
+      message: "Ticket créé avec succès",
     });
   };
 
@@ -192,7 +197,7 @@ export default function Messages() {
                 key={ticket.id}
                 onClick={() => setSelectedTicket(ticket)}
                 className={`w-full p-4 text-left hover:bg-gray-50 ${
-                  selectedTicket?.id === ticket.id ? 'bg-purple-50' : ''
+                  selectedTicket?.id === ticket.id ? "bg-purple-50" : ""
                 }`}
               >
                 <div className="flex justify-between items-start">
@@ -201,14 +206,18 @@ export default function Messages() {
                       {ticket.subject}
                     </p>
                     <div className="mt-1 flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        statusStyles[ticket.status]
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          statusStyles[ticket.status]
+                        }`}
+                      >
                         {statusLabels[ticket.status]}
                       </span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        priorityStyles[ticket.priority]
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          priorityStyles[ticket.priority]
+                        }`}
+                      >
                         {priorityLabels[ticket.priority]}
                       </span>
                     </div>
@@ -233,14 +242,18 @@ export default function Messages() {
                     {selectedTicket.subject}
                   </h2>
                   <div className="mt-1 flex items-center space-x-2">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      statusStyles[selectedTicket.status]
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        statusStyles[selectedTicket.status]
+                      }`}
+                    >
                       {statusLabels[selectedTicket.status]}
                     </span>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      priorityStyles[selectedTicket.priority]
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        priorityStyles[selectedTicket.priority]
+                      }`}
+                    >
                       {priorityLabels[selectedTicket.priority]}
                     </span>
                     <span className="text-xs text-gray-500">
@@ -257,18 +270,24 @@ export default function Messages() {
                 <div
                   key={msg.id}
                   className={`flex ${
-                    msg.sender === 'user' ? 'justify-end' : 'justify-start'
+                    msg.sender === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <div className={`max-w-[80%] rounded-lg p-3 ${
-                    msg.sender === 'user'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}>
+                  <div
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      msg.sender === "user"
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-100 text-gray-900"
+                    }`}
+                  >
                     <p className="text-sm">{msg.content}</p>
-                    <p className={`text-xs mt-1 ${
-                      msg.sender === 'user' ? 'text-purple-200' : 'text-gray-500'
-                    }`}>
+                    <p
+                      className={`text-xs mt-1 ${
+                        msg.sender === "user"
+                          ? "text-purple-200"
+                          : "text-gray-500"
+                      }`}
+                    >
                       {formatDate(msg.timestamp)}
                     </p>
                   </div>
@@ -277,7 +296,7 @@ export default function Messages() {
             </div>
 
             {/* Input */}
-            {selectedTicket.status === 'open' && (
+            {selectedTicket.status === "open" && (
               <div className="p-4 border-t">
                 <div className="flex space-x-4">
                   <Input
@@ -286,9 +305,7 @@ export default function Messages() {
                     placeholder="Votre message..."
                     className="flex-1"
                   />
-                  <Button onClick={handleSend}>
-                    Envoyer
-                  </Button>
+                  <Button onClick={handleSend}>Envoyer</Button>
                 </div>
               </div>
             )}
@@ -330,9 +347,7 @@ export default function Messages() {
                 >
                   Annuler
                 </Button>
-                <Button onClick={handleCreateTicket}>
-                  Créer le ticket
-                </Button>
+                <Button onClick={handleCreateTicket}>Créer le ticket</Button>
               </div>
             </div>
           </div>

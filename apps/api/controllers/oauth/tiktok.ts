@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import dotenv from "dotenv";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
-import { db } from "../../lib/firebase";
-import { getCachedData } from "../../lib/redis";
+import { deleteCachedData, getCachedData } from "../../lib/redis";
+import { TiktokAccount } from "./types";
+import { createDocument } from "../firebase";
+import {
+  getTikTokAccessToken,
+  getTikTokUserInfo,
+  getTikTokVideos,
+} from "../../lib/tiktok";
 
 dotenv.config();
-
-const REDIRECT_URI = `${process.env.OAUTH_REDIRECT_BASE_URI}/cb/tiktok`;
 
 export const generateAuthURL = async (
   req: Request,
@@ -44,17 +47,9 @@ export const OAuthCallback = async (
       token_type,
     } = await getAccessToken(code);
 
-    console.log("Access Token:", access_token);
-    console.log("Open ID:", open_id);
-    console.log("Expires in:", expires_in, "seconds");
-    console.log("Refresh Token:", refresh_token);
-    console.log("Refresh Expires in:", refresh_expires_in, "seconds");
-    console.log("Token Type:", token_type);
-
     const formData = await getCachedData(userId);
-    console.log("formData:", formData);
-
-    const accountRef = await addDoc(collection(db, "socialAccounts"), {
+    await deleteCachedData(userId);
+    await createDocument("accounts", {
       userId,
       code,
       token: access_token,
@@ -65,7 +60,6 @@ export const OAuthCallback = async (
       scope,
       tokenType: token_type,
       ...formData,
-      createdAt: Timestamp.now(),
     });
 
     res.redirect(process.env.FRONT_REDIRECT_URI as string);
@@ -78,148 +72,51 @@ export const OAuthCallback = async (
   }
 };
 
-export const getAccessToken = async (code: string): Promise<OAuthResponse> => {
-  try {
-    const response = await fetch(
-      "https://open.tiktokapis.com/v2/oauth/token/",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          client_key: process.env.TIKTOK_CLIENT_KEY as string,
-          client_secret: process.env.TIKTOK_CLIENT_SECRET as string,
-          code,
-          grant_type: "authorization_code",
-          redirect_uri: `${process.env.OAUTH_REDIRECT_BASE_URI}/cb/tiktok`,
-        }),
-      }
-    );
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error during request:", error);
-    throw error;
-  }
+export const getAccessToken = async (code: string) => {
+  const tokens = await getTikTokAccessToken(code);
+  return tokens;
 };
 
 export const refreshAccessToken = async (
-  docData: any,
+  docData: TiktokAccount,
   updateCallback: (docId: string, updates: any) => void
 ) => {
-  try {
-    let token = docData.token;
-    const isTokenExpired =
-      docData.expiresAt < Date.now() || docData.refreshExpiresAt < Date.now();
-    console.log("Is Token Expired:", isTokenExpired);
-    if (isTokenExpired) {
-      // Récupérer un nouveau token
-      const response = await fetch(
-        "https://open.tiktokapis.com/v2/oauth/token/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            client_key: process.env.TIKTOK_CLIENT_KEY as string,
-            client_secret: process.env.TIKTOK_CLIENT_SECRET as string,
-            grant_type: "refresh_token",
-            refresh_token: docData.refreshToken,
-          }),
-        }
-      );
+  let token = docData.token;
+  const isTokenExpired =
+    docData.expiresAt < Date.now() || docData.refreshExpiresAt < Date.now();
+  if (isTokenExpired) {
+    const tokens = await getTikTokAccessToken(docData.refreshToken);
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to refresh token: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const {
-        open_id,
-        scope,
-        access_token,
-        expires_in,
-        refresh_token,
-        refresh_expires_in,
-        token_type,
-      } = await response.json();
-
-      const updatedRef = await updateCallback(docData.id, {
-        token: access_token,
-        expiresAt: Date.now() + expires_in * 1000,
-        refreshToken: refresh_token,
-        refreshExpiresAt: Date.now() + refresh_expires_in * 1000,
-        openId: open_id,
-        scope,
-        tokenType: token_type,
-      });
-      console.log("Token updated:", updatedRef);
-      token = access_token;
-    }
-
-    return token;
-  } catch (error) {
-    console.error("Error refreshing access token:", error.message);
-    return null;
+    const updatedRef = await updateCallback(docData.id, {
+      token: tokens.access_token,
+      expiresAt: Date.now() + tokens.expires_in * 1000,
+      refreshToken: tokens.refresh_token,
+      refreshExpiresAt: Date.now() + tokens.refresh_expires_in * 1000,
+      openId: tokens.open_id,
+      scope: tokens.scope,
+      tokenType: tokens.token_type,
+    });
+    token = tokens.access_token;
   }
+
+  return token;
 };
 
-export const getUserInfo = async (accessToken: string): Promise<any> => {
-  try {
-    const userInfoResponse = await fetch(
-      `https://open.tiktokapis.com/v2/user/info/?fields=is_verified,open_id,union_id,avatar_url,username,follower_count,following_count,likes_count,video_count`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    if (!userInfoResponse.ok) {
-      throw new Error("Failed to retrieve user info from TikTok");
-    }
-
-    const { data } = await userInfoResponse.json();
-    delete data.id;
-    console.log("User data:", data);
-    return data.user;
-  } catch (error) {
-    console.error("Error during request:", error);
-    throw error;
-  }
+export const getUserInfo = async (accessToken: string) => {
+  const { data } = await getTikTokUserInfo(accessToken);
+  return data.user;
 };
 
-export const getUserPosts = async (accessToken: string): Promise<any[]> => {
-  try {
-    const response = await fetch(
-      `https://open.tiktokapis.com/v2/video/list/?fields=cover_image_url,id,title`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          cursor: 0,
-          max_count: 10,
-        }),
-      }
-    );
-    console.log("Response:", response);
+export const getUserPosts = async (accessToken: string) => {
+  const response = await getTikTokVideos(accessToken);
+  return response.data.videos;
+};
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const { data } = (await response.json()) as { data: any[] };
-    console.log("getUserPosts:", data);
-    return data.videos;
-  } catch (error) {
-    console.error("Error fetching Instagram posts:", error);
-    throw error;
-  }
+export const getUserPage = async (accessToken: string) => {
+  const userInfo = await getUserInfo(accessToken);
+  const posts = await getUserPosts(accessToken);
+  return {
+    ...userInfo,
+    posts,
+  };
 };

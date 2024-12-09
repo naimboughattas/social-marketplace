@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, Settings as SettingsIcon, MessageSquare, Share2, Bell, LogOut } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useCart } from '../lib/cart';
@@ -7,16 +7,17 @@ import CartDrawer from './CartDrawer';
 import Button from './Button';
 import NotificationBell from './NotificationBell';
 import Navigation from './DashboardLayout/Navigation';
+import LanguageSelector from './LanguageSelector';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const { state } = useCart();
+  // const { state } = useCart();
+  // console.log(state);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed');
@@ -115,17 +116,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </>
               )}
 
-                       <NotificationBell />
-
+              <NotificationBell />
 
               <div className="flex items-center space-x-2">
+                <LanguageSelector />
+                
                 <Link to="/settings">
                   <Button variant="outline" size="sm">
                     <SettingsIcon className="h-4 w-4" />
                   </Button>
                 </Link>
 
-       
                 <Link to="/dashboard/support">
                   <Button variant="outline" size="sm">
                     <MessageSquare className="h-4 w-4" />
@@ -137,7 +138,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   size="sm"
                   onClick={() => setIsCartOpen(true)}
                 >
-                  Panier ({state.items.length})
+                  {/* Panier ({state?.items?.length}) */}
                 </Button>
               </div>
             </div>

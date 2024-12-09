@@ -9,13 +9,17 @@ import IntroStep from './IntroStep';
 import ServiceStep from './ServiceStep';
 import InteractionTypeStep from './InteractionTypeStep';
 import TargetStep from './TargetStep';
+import PostSelectionStep from './PostSelectionStep';
+import CommentOptionsStep from './CommentOptionsStep';
 import SettingsStep from './SettingsStep';
 import ConfirmationStep from './ConfirmationStep';
 import AIResultsModal from './AIResultsModal';
 import { mockInfluencers } from '../../lib/mock-data';
 
-type Step = 'intro' | 'service' | 'type' | 'target' | 'settings' | 'confirmation';
+type Step = 'intro' | 'service' | 'type' | 'target' | 'posts' | 'comment' | 'settings' | 'confirmation';
 type InteractionType = 'specific' | 'monthly' | 'specific-future' | 'future' | 'one-month';
+type CommentType = 'custom' | 'delegated';
+type CommentLength = 'emoji' | 'short' | 'medium' | 'long';
 
 interface AIPilotModalProps {
   isOpen: boolean;
@@ -33,6 +37,13 @@ export default function AIPilotModal({
   const [selectedService, setSelectedService] = useState<Service>('like');
   const [interactionType, setInteractionType] = useState<InteractionType>('specific');
   const [target, setTarget] = useState('');
+  const [showPostSelection, setShowPostSelection] = useState(true);
+  const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
+  const [postUrl, setPostUrl] = useState('');
+  const [commentType, setCommentType] = useState<CommentType>('custom');
+  const [commentText, setCommentText] = useState('');
+  const [commentLength, setCommentLength] = useState<CommentLength>('short');
+  const [commentExample, setCommentExample] = useState('');
   const [settings, setSettings] = useState({
     category: '',
     country: '',
@@ -61,6 +72,41 @@ export default function AIPilotModal({
         });
         return;
       }
+      if (selectedService === 'follow') {
+        setStep('settings');
+      } else if (interactionType === 'future') {
+        setStep('settings');
+      } else {
+        setStep('posts');
+      }
+    } else if (step === 'posts') {
+      if (!showPostSelection && !postUrl) {
+        addNotification({
+          type: 'error',
+          message: 'Veuillez entrer une URL'
+        });
+        return;
+      }
+      if (showPostSelection && selectedPosts.length === 0) {
+        addNotification({
+          type: 'error',
+          message: 'Veuillez sélectionner au moins un post'
+        });
+        return;
+      }
+      if (selectedService === 'comment') {
+        setStep('comment');
+      } else {
+        setStep('settings');
+      }
+    } else if (step === 'comment') {
+      if (commentType === 'custom' && !commentText) {
+        addNotification({
+          type: 'error',
+          message: 'Veuillez entrer un commentaire'
+        });
+        return;
+      }
       setStep('settings');
     } else if (step === 'settings') {
       if (settings.quantity <= 0 || settings.budget <= 0) {
@@ -86,7 +132,10 @@ export default function AIPilotModal({
       service: 'intro',
       type: 'service',
       target: 'type',
-      settings: 'target',
+      posts: 'target',
+      comment: 'posts',
+      settings: selectedService === 'comment' ? 'comment' : 
+               selectedService === 'follow' || interactionType === 'future' ? 'target' : 'posts',
       confirmation: 'settings',
       intro: 'intro'
     };
@@ -151,6 +200,30 @@ export default function AIPilotModal({
                 service={selectedService}
                 target={target}
                 onTargetChange={setTarget}
+              />
+            )}
+
+            {step === 'posts' && (
+              <PostSelectionStep
+                showPostSelection={showPostSelection}
+                selectedPosts={selectedPosts}
+                postUrl={postUrl}
+                onShowPostSelectionChange={setShowPostSelection}
+                onSelectedPostsChange={setSelectedPosts}
+                onPostUrlChange={setPostUrl}
+              />
+            )}
+
+            {step === 'comment' && (
+              <CommentOptionsStep
+                commentType={commentType}
+                onCommentTypeChange={setCommentType}
+                commentText={commentText}
+                onCommentTextChange={setCommentText}
+                commentLength={commentLength}
+                onCommentLengthChange={setCommentLength}
+                commentExample={commentExample}
+                onCommentExampleChange={setCommentExample}
               />
             )}
 

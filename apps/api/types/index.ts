@@ -3,7 +3,7 @@ export interface SocialAccount {
   pageId: string;
   code: string;
   token: string;
-  platform: 'instagram' | 'tiktok' | 'youtube' | 'x' | 'facebook' | 'linkedin';
+  platform: "instagram" | "tiktok" | "youtube" | "x" | "facebook" | "linkedin";
   username: string;
   displayName: string;
   profileImage: string;
@@ -32,7 +32,7 @@ export interface OAuthResponse {
 }
 
 export interface UserInfo {
-  id?: string;
+  pageId?: string;
   username?: string;
   name?: string;
   picture?: string;

@@ -1,68 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Platform, Service, SocialAccount } from '../../lib/types';
 import { useNotifications } from '../../lib/notifications';
+import { mockInfluencers } from '../../lib/mock-data';
 import ServiceModal from '../../components/ServiceModal';
 import MultiSelectServiceModal from '../../components/MultiSelectServiceModal';
-import AIPilotModal from '../../components/ai-pilot/AIPilotModal';
+import AIPilotModal from '../../components/AIPilotModal';
 import CatalogHeader from '../../components/catalog/CatalogHeader';
 import PlatformSelector from '../../components/catalog/PlatformSelector';
 import InfluencerTable from '../../components/catalog/InfluencerTable';
 import FiltersModal from '../../components/catalog/FiltersModal';
 import { useInfluencerSort } from '../../hooks/useInfluencerSort';
 import { useInfluencerFilters } from '../../hooks/useInfluencerFilters';
-import { useCart } from '../../lib/cart';
-import { getInfluencers } from '../../lib/firebase/influencers';
+import { useMultiSelect } from './hooks/useMultiSelect';
 
 export default function InfluencerCatalog() {
   const { addNotification } = useNotifications();
-  const { addItem } = useCart();
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('instagram');
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showAIPilot, setShowAIPilot] = useState(false);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
-  const [multiSelectMode, setMultiSelectMode] = useState(false);
-  const [selectedInfluencers, setSelectedInfluencers] = useState<string[]>([]);
   const [selectedService, setSelectedService] = useState<{
     service: Service;
     influencer: SocialAccount | null;
   } | null>(null);
-  const [currentMultiSelectService, setCurrentMultiSelectService] = useState<{
-    service: Service;
-    target: string;
-    commentText?: string;
-  } | null>(null);
-  const [influencers, setInfluencers] = useState<SocialAccount[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchInfluencers = async () => {
-      try {
-        setLoading(true);
-        const fetchedInfluencers = await getInfluencers({
-          platform: selectedPlatform
-        });
-        setInfluencers(fetchedInfluencers);
-      } catch (error) {
-        addNotification({
-          type: 'error',
-          message: 'Erreur lors du chargement des influenceurs'
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInfluencers();
-  }, [selectedPlatform]);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   const {
     filters,
     setFilters,
     resetFilters,
     filteredInfluencers
-  } = useInfluencerFilters(influencers, selectedPlatform, search);
+  } = useInfluencerFilters(mockInfluencers, selectedPlatform, search);
 
   const {
     sortField,
@@ -70,6 +40,15 @@ export default function InfluencerCatalog() {
     sortedInfluencers,
     handleSort
   } = useInfluencerSort(filteredInfluencers);
+
+  const {
+    multiSelectMode,
+    selectedInfluencers,
+    handleMultiSelectConfirm,
+    handleConfirmSelection,
+    resetMultiSelect,
+    setSelectedInfluencers
+  } = useMultiSelect();
 
   const handleServiceSelect = (influencer: SocialAccount, service: Service) => {
     if (multiSelectMode) {
@@ -84,55 +63,6 @@ export default function InfluencerCatalog() {
     }
   };
 
-  const handleMultiSelectConfirm = (service: Service, target: string, commentText?: string) => {
-    setShowMultiSelect(false);
-    setMultiSelectMode(true);
-    setSelectedInfluencers([]);
-    setCurrentMultiSelectService({ service, target, commentText });
-    addNotification({
-      type: 'info',
-      message: 'Sélectionnez maintenant les influenceurs pour cette action'
-    });
-  };
-
-  const handleConfirmSelection = () => {
-    if (!currentMultiSelectService) return;
-
-    const selectedAccounts = sortedInfluencers.filter(inf => 
-      selectedInfluencers.includes(inf.id)
-    );
-
-    selectedAccounts.forEach(influencer => {
-      addItem({
-        id: crypto.randomUUID(),
-        influencerUsername: influencer.username,
-        service: currentMultiSelectService.service,
-        price: influencer.prices[currentMultiSelectService.service] || 0,
-        targetHandle: currentMultiSelectService.target,
-        commentText: currentMultiSelectService.commentText
-      });
-    });
-
-    addNotification({
-      type: 'success',
-      message: `${selectedAccounts.length} service(s) ajouté(s) au panier`
-    });
-
-    setMultiSelectMode(false);
-    setSelectedInfluencers([]);
-    setCurrentMultiSelectService(null);
-  };
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -140,14 +70,12 @@ export default function InfluencerCatalog() {
           onShowAIPilot={() => setShowAIPilot(true)}
           onShowMultiSelect={() => setShowMultiSelect(true)}
           onShowFilters={() => setShowFilters(true)}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
           multiSelectMode={multiSelectMode}
-          onCancelMultiSelect={() => {
-            setMultiSelectMode(false);
-            setSelectedInfluencers([]);
-            setCurrentMultiSelectService(null);
-          }}
+          onCancelMultiSelect={resetMultiSelect}
           selectedCount={selectedInfluencers.length}
-          onConfirmMultiSelect={handleConfirmSelection}
+          onConfirmMultiSelect={() => handleConfirmSelection(sortedInfluencers)}
         />
 
         <PlatformSelector
@@ -180,7 +108,13 @@ export default function InfluencerCatalog() {
           <AIPilotModal
             isOpen={showAIPilot}
             onClose={() => setShowAIPilot(false)}
-            platform={selectedPlatform}
+            onConfirm={(service, target, settings, commentText) => {
+              addNotification({
+                type: 'success',
+                message: 'Sélection IA effectuée avec succès'
+              });
+              setShowAIPilot(false);
+            }}
           />
         )}
 

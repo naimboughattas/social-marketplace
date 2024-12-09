@@ -1,8 +1,9 @@
-import { Sparkles, SlidersHorizontal, X, ShoppingCart } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, X, ShoppingCart, Megaphone } from 'lucide-react';
 import Button from '../Button';
 
 interface CatalogHeaderProps {
   onShowAIPilot: () => void;
+  onShowCampaign: () => void;
   onShowMultiSelect: () => void;
   onShowFilters: () => void;
   multiSelectMode?: boolean;
@@ -13,6 +14,7 @@ interface CatalogHeaderProps {
 
 export default function CatalogHeader({
   onShowAIPilot,
+  onShowCampaign,
   onShowMultiSelect,
   onShowFilters,
   multiSelectMode = false,
@@ -26,7 +28,7 @@ export default function CatalogHeader({
         <h2 className="text-2xl font-bold text-gray-900">Catalogue</h2>
         <p className="mt-1 text-sm text-gray-500">
           {multiSelectMode 
-            ? `${selectedCount} influenceur${selectedCount > 1 ? 's' : ''} sélectionné${selectedCount > 1 ? 's' : ''}`
+            ? `${selectedCount} influenceur${selectedCount > 1 ? 's' : ''} sélectionné${selectedCount > 1 ? 's' : '' }`
             : 'Trouvez les meilleurs influenceurs pour votre marque'}
         </p>
       </div>
@@ -58,6 +60,15 @@ export default function CatalogHeader({
             >
               <Sparkles className="h-4 w-4 mr-2" />
               IA Pilot
+            </Button>
+
+            <Button
+              variant="primary"
+              onClick={onShowCampaign}
+              className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white shadow-lg"
+            >
+              <Megaphone className="h-4 w-4 mr-2" />
+              Campagne
             </Button>
             
             <Button

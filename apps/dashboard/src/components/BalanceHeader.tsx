@@ -1,12 +1,12 @@
+import { useState } from 'react';
 import { Wallet, ArrowRightLeft } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import Button from './Button';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 import { useNotifications } from '../lib/notifications';
 
 export default function BalanceHeader() {
-  const { user, updateBalance } = useAuth();
+  const { user, updateBalance, updatePendingBalance } = useAuth();
   const { addNotification } = useNotifications();
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferAmount, setTransferAmount] = useState('');
@@ -27,6 +27,8 @@ export default function BalanceHeader() {
       
       // Mettre à jour le solde
       updateBalance(amount);
+      // Mettre à jour les gains en attente
+      updatePendingBalance(-amount);
       
       addNotification({
         type: 'success',

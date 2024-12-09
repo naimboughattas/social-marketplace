@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Tab } from '@headlessui/react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { useAuth } from '../../lib/auth';
-import { useWithdraw } from '../../hooks/useWithdraw';
+import { useNotifications } from '../../lib/notifications';
 import { cn } from '../../lib/utils';
 
 import WithdrawSection from './WithdrawSection';
@@ -11,35 +11,8 @@ import BillingProfileList from './BillingProfileList';
 
 export default function Withdraw() {
   const { user } = useAuth();
-  const { withdrawals, loading, error, handleWithdraw } = useWithdraw();
+  const { addNotification } = useNotifications();
   const [selectedTab, setSelectedTab] = useState(0);
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-red-500">{error}</p>
-          <Button 
-            variant="outline"
-            className="mt-4"
-            onClick={() => window.location.reload()}
-          >
-            Réessayer
-          </Button>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
@@ -96,11 +69,7 @@ export default function Withdraw() {
 
           <Tab.Panels>
             <Tab.Panel>
-              <WithdrawSection 
-                onChangeTab={setSelectedTab}
-                onWithdraw={handleWithdraw}
-                withdrawals={withdrawals}
-              />
+              <WithdrawSection onChangeTab={setSelectedTab} />
             </Tab.Panel>
 
             <Tab.Panel>
