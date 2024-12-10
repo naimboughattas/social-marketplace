@@ -10,7 +10,7 @@ import {
   getAccount,
 } from "../services/accounts";
 
-export function useAccounts() {
+export function useAccounts(isOwner?: boolean) {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
@@ -18,13 +18,13 @@ export function useAccounts() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user && !isOwner) return;
 
     const fetchAccounts = async () => {
       try {
         setLoading(true);
         const fetchedAccounts = await getAccounts({
-          filters: [["userId", "==", user.id]],
+          ...(!isOwner && { filters: [["userId", "==", user.id]] }),
         });
         setAccounts(fetchedAccounts);
         setError(null);

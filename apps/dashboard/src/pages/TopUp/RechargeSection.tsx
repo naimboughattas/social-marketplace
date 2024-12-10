@@ -8,6 +8,7 @@ import BillingSection from "./BillingSection";
 import SummarySection from "./SummarySection";
 import CustomAmount from "../../components/topup/CustomAmount";
 import { useOrders } from "../../lib/hooks/useOrders";
+import { usePayments } from "../../lib/hooks/usePayments";
 
 export const PACKS = [
   { id: 1, amount: 50, bonus: 0 },
@@ -34,6 +35,7 @@ export default function RechargeSection({ onChangeTab }: RechargeSectionProps) {
   >(null);
   const [useEarnings, setUseEarnings] = useState(false);
   const { handleCreateOrder } = useOrders();
+  const { handleCreatePayment } = usePayments();
 
   // Charger et sélectionner automatiquement les méthodes par défaut
   useEffect(() => {
@@ -58,11 +60,19 @@ export default function RechargeSection({ onChangeTab }: RechargeSectionProps) {
 
   const handlePayment = async () => {
     if (!selectedPaymentMethod || !selectedBillingProfile) {
-      await handleCreateOrder({
-        amount: selectedAmount,
-        paymentMethodId: selectedPaymentMethod,
-        billingProfileId: selectedBillingProfile,
-      });
+      // await handleCreatePayment({
+      //   userId: "user.id,",
+      //   amount: 0,
+      //   method: "paypal",
+      //   status: "pending",
+      //   reference: "string",
+      //   createdAt: new Date(),
+      // });
+      // await handleCreateOrder({
+      //   amount: selectedAmount,
+      //   paymentMethodId: selectedPaymentMethod,
+      //   billingProfileId: selectedBillingProfile,
+      // });
       addNotification({
         type: "error",
         message: "Veuillez compléter tous les champs",

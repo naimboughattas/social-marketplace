@@ -38,10 +38,6 @@ export async function getAccounts(filters: any): Promise<SocialAccount[]> {
     }
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch accounts");
-  }
-
   return await response.json();
 }
 

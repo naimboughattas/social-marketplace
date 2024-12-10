@@ -29,7 +29,7 @@ export default function InfluencerCatalog() {
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   // const [influencers, setInfluencers] = useState<SocialAccount[]>([]);
-  const { accounts: influencers } = useAccounts(); // Replace the above line with this
+  const { accounts: influencers } = useAccounts(true); // Replace the above line with this
   const [loading, setLoading] = useState(true);
   const [selectedInfluencers, setSelectedInfluencers] = useState<string[]>([]);
   const [selectedService, setSelectedService] = useState<{
