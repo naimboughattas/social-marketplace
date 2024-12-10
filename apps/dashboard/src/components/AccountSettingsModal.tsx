@@ -20,20 +20,28 @@ import {
 } from "../lib/types";
 import { useAuth } from "../lib/auth";
 
+const getCallbackURL = (userId: string) => ({
+  instagram: `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/instagram/auth?userId=${userId}`,
+  youtube: `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/youtube/auth?userId=${userId}`,
+  tiktok: `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/tiktok/auth?userId=${userId}`,
+  x: `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/x/auth?userId=${userId}`,
+  linkedin: `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/linkedin/auth?userId=${userId}`,
+  facebook: `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/facebook/auth?userId=${userId}`,
+});
+
 interface AccountSettingsModalProps {
   account?: SocialAccount;
   onClose: () => void;
   onSave: (account: SocialAccount | Partial<SocialAccount>) => void;
 }
 
-type Step = "platform" | "info" | "location" | "services" | "verification";
+type Step = "platform" | "info" | "location" | "services";
 
 const STEP_TITLES = {
   platform: "Choisir une plateforme",
   info: "Informations du compte",
   location: "Localisation",
   services: "Services proposés",
-  verification: "Vérification du compte",
 };
 
 export default function AccountSettingsModal({
@@ -44,43 +52,24 @@ export default function AccountSettingsModal({
   const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [step, setStep] = useState<Step>("platform");
-  const [formData, setFormData] = useState<Partial<SocialAccount>>(
-    account || {
-      platform: "instagram",
-      username: "",
-      displayName: "",
-      profileImage: "",
-      followers: 0,
-      category: "",
-      country: "",
-      city: "",
-      language: "",
-      isVerified: false,
-      isActive: true,
-      hideIdentity: false,
-      prices: {},
-      availableServices: [],
-      avgDeliveryTime: 30,
-      completedOrders: 0,
-      rating: 5.0,
-    }
-  );
-
-  const [verificationCode] = useState(() => {
-    const timestamp = Date.now().toString(36);
-    const randomStr = Math.random().toString(36).substring(2, 8);
-    return `VERIFY-${randomStr}-${timestamp}`.toUpperCase();
+  const [formData, setFormData] = useState<Partial<SocialAccount>>({
+    platform: undefined,
+    category: "",
+    country: "",
+    city: "",
+    language: "",
+    isActive: true,
+    hideIdentity: false,
+    prices: {},
+    availableServices: [],
+    avgDeliveryTime: 30,
+    completedOrders: 0,
+    rating: 5.0,
   });
 
   const [showPriceSuggestions, setShowPriceSuggestions] = useState(false);
 
-  const steps: Step[] = [
-    "platform",
-    "info",
-    "location",
-    "services",
-    "verification",
-  ];
+  const steps: Step[] = ["platform", "info", "location", "services"];
 
   const handleNext = () => {
     const currentIndex = steps.indexOf(step);
@@ -95,25 +84,6 @@ export default function AccountSettingsModal({
       setStep(steps[currentIndex - 1]);
     }
   };
-
-  // const handleSubmit = () => {
-  //   if (!formData.username) {
-  //     addNotification({
-  //       type: "error",
-  //       message: "Veuillez entrer un nom d'utilisateur",
-  //     });
-  //     return;
-  //   }
-
-  //   const newAccount = {
-  //     ...formData,
-  //     id: account?.id || crypto.randomUUID(),
-  //     verificationCode,
-  //   };
-
-  //   onSave(newAccount);
-  //   onClose();
-  // };
 
   const handleServiceToggle = (service: Service, enabled: boolean) => {
     const updatedServices = enabled
@@ -131,23 +101,20 @@ export default function AccountSettingsModal({
   };
 
   const handleSubmit = async () => {
-    // if (!formData.username) {
-    //   addNotification({
-    //     type: "error",
-    //     message: "Veuillez entrer un nom d'utilisateur",
-    //   });
-    //   return;
-    // }
-
-    // if (!formData.availableServices?.length) {
-    //   addNotification({
-    //     type: "error",
-    //     message: "Veuillez sélectionner au moins un service",
-    //   });
-    //   return;
-    // }
-
-    console.log(user);
+    if (!formData.platform) {
+      addNotification({
+        type: "error",
+        message: "Veuillez sélectionner une plateforme",
+      });
+      return;
+    }
+    if (!formData.availableServices?.length) {
+      addNotification({
+        type: "error",
+        message: "Veuillez sélectionner au moins un service",
+      });
+      return;
+    }
     if (!user) return;
     await fetch(`${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/cache/set`, {
       method: "POST",
@@ -160,41 +127,8 @@ export default function AccountSettingsModal({
       }),
     });
 
-    if (formData.platform === "instagram") {
-      window.location.href = `${
-        import.meta.env.VITE_NEXT_PUBLIC_API_URL
-      }/instagram/auth?userId=${user.id}`;
-    }
-
-    if (formData.platform === "youtube") {
-      window.location.href = `${
-        import.meta.env.VITE_NEXT_PUBLIC_API_URL
-      }/youtube/auth?userId=${user.id}`;
-    }
-
-    if (formData.platform === "tiktok") {
-      window.location.href = `${
-        import.meta.env.VITE_NEXT_PUBLIC_API_URL
-      }/tiktok/auth?userId=${user.id}`;
-    }
-
-    if (formData.platform === "x") {
-      window.location.href = `${
-        import.meta.env.VITE_NEXT_PUBLIC_API_URL
-      }/x/auth?userId=${user.id}`;
-    }
-
-    if (formData.platform === "linkedin") {
-      window.location.href = `${
-        import.meta.env.VITE_NEXT_PUBLIC_API_URL
-      }/linkedin/auth?userId=${user.id}`;
-    }
-
-    if (formData.platform === "facebook") {
-      window.location.href = `${
-        import.meta.env.VITE_NEXT_PUBLIC_API_URL
-      }/facebook/auth?userId=${user.id}`;
-    }
+    // Redirection vers l'URL correspondant à la plateforme sélectionnée
+    window.location.href = getCallbackURL(user.id)[formData.platform];
   };
 
   const renderStepContent = () => {
@@ -231,14 +165,6 @@ export default function AccountSettingsModal({
           <div>
             <h3 className="text-lg font-medium mb-4">Informations du compte</h3>
             <div className="space-y-4">
-              <Input
-                label="Nom d'utilisateur"
-                value={formData.username || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, username: e.target.value })
-                }
-                required
-              />
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Catégorie
@@ -325,7 +251,7 @@ export default function AccountSettingsModal({
                 <h4 className="text-xs font-medium text-gray-500">
                   Services et tarifs
                 </h4>
-                <Button
+                {/* <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowPriceSuggestions(true)}
@@ -333,7 +259,7 @@ export default function AccountSettingsModal({
                   className="text-xs"
                 >
                   Suggérer des prix
-                </Button>
+                </Button> */}
               </div>
               {(["follow", "like", "comment", "repost_story"] as Service[]).map(
                 (service) => {
@@ -398,75 +324,6 @@ export default function AccountSettingsModal({
             </div>
           </div>
         );
-
-      case "verification":
-        return (
-          <div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-purple-900 mb-2">
-                Dernière étape : Vérification de votre compte
-              </h3>
-              <p className="text-sm text-purple-700">
-                Pour finaliser l'ajout de votre compte et commencer à recevoir
-                des commandes, nous devons vérifier que vous êtes bien
-                propriétaire du compte <strong>{formData.username}</strong>.
-              </p>
-            </div>
-
-            <div className="space-y-4 mt-6">
-              <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-medium">
-                  1
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    Voici votre code de vérification
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Copiez ce code unique qui prouve que vous êtes propriétaire
-                    du compte
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-gray-100 rounded-lg">
-                <code className="text-lg font-mono text-purple-600">
-                  {verificationCode}
-                </code>
-              </div>
-
-              <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-medium">
-                  2
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">
-                    Envoyez-nous le code
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Envoyez-nous un message direct sur{" "}
-                    {PLATFORM_LABELS[formData.platform as Platform]} avec ce
-                    code.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-medium">
-                  3
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">Confirmez l'envoi</p>
-                  <p className="text-sm text-gray-500">
-                    Une fois le code envoyé, cliquez sur le bouton ci-dessous.
-                    Nous vérifierons votre message et activerons votre compte
-                    dans les plus brefs délais.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
     }
   };
 
@@ -512,7 +369,7 @@ export default function AccountSettingsModal({
                 </Button>
               )}
               <div className="ml-auto">
-                {step === "services" ? (
+                {step === "location" ? (
                   <div className="flex space-x-2">
                     <Button variant="outline" onClick={handleNext}>
                       Ignorer
@@ -521,22 +378,20 @@ export default function AccountSettingsModal({
                   </div>
                 ) : (
                   <Button
-                    onClick={
-                      step === "verification" ? handleSubmit : handleNext
-                    }
+                    onClick={step === "services" ? handleSubmit : handleNext}
                   >
-                    {step === "verification" ? "Terminer" : "Continuer"}
+                    {step === "services" ? "Terminer" : "Continuer"}
                   </Button>
                 )}
               </div>
             </div>
           </div>
 
-          {showPriceSuggestions && (
+          {/* {showPriceSuggestions && (
             <PriceSuggestionModal
               isOpen={showPriceSuggestions}
               onClose={() => setShowPriceSuggestions(false)}
-              followers={formData.followers || 0}
+              followers={0}
               onApply={(prices) => {
                 setFormData({
                   ...formData,
@@ -548,7 +403,7 @@ export default function AccountSettingsModal({
                 setShowPriceSuggestions(false);
               }}
             />
-          )}
+          )} */}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

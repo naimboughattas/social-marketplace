@@ -97,17 +97,11 @@ export interface Payment {
 }
 
 export interface SocialAccount {
-  id: string;
   platform: Platform;
-  username: string;
-  displayName: string;
-  profileImage: string;
-  followers: number;
   category: string;
   country: string;
   city: string;
   language: string;
-  isVerified: boolean;
   isActive: boolean;
   hideIdentity: boolean;
   prices: {
@@ -117,9 +111,6 @@ export interface SocialAccount {
   avgDeliveryTime: number;
   completedOrders: number;
   rating: number;
-  pk?: string;
-  verificationCode?: string;
-  verificationSent?: boolean;
 }
 
 export interface Ticket {

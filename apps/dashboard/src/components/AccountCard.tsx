@@ -51,7 +51,7 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
       return {
         username: data.title,
         profile_picture_url: data.thumbnails.default.url,
-        followers: data.followers,
+        followers: data.subscriberCount,
         category: data.category,
         country: data.country,
         city: data.city,
@@ -99,6 +99,7 @@ export default function AccountCard({
   onUpdate,
   onDelete,
 }: AccountCardProps) {
+  const accountData = formatAccountDataByPlatform(account.platform, account);
   const { addNotification } = useNotifications();
   const [isEditingLocation, setIsEditingLocation] = useState(false);
   const [showPriceSuggestions, setShowPriceSuggestions] = useState(false);
@@ -159,7 +160,7 @@ export default function AccountCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
-              src={account.profile_picture_url}
+              src={accountData.profile_picture_url}
               alt={account.username}
               className="h-12 w-12 rounded-full object-cover ring-2 ring-white"
             />
@@ -172,12 +173,9 @@ export default function AccountCard({
                 >
                   {account.username}
                 </Link>
-                {account.isVerified && (
-                  <CheckCircle className="h-4 w-4 text-blue-500" />
-                )}
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
-                <span>{formatFollowers(account.followers)} followers</span>
+                <span>{formatFollowers(accountData.followers)} followers</span>
                 <span>•</span>
                 <span>
                   {account.city}, {account.country}
@@ -298,7 +296,6 @@ export default function AccountCard({
               variant="outline"
               size="sm"
               onClick={() => setShowPriceSuggestions(true)}
-              disabled={!account.isVerified}
               className="text-xs"
             >
               <Calculator className="h-3 w-3 mr-1" />
@@ -325,7 +322,6 @@ export default function AccountCard({
                         onChange={(e) =>
                           handleServiceToggle(service, e.target.checked)
                         }
-                        disabled={!account.isVerified}
                         className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                       />
                       <div className="flex items-center space-x-2">
@@ -352,7 +348,6 @@ export default function AccountCard({
                           placeholder="0"
                           min="0"
                           step="0.5"
-                          disabled={!account.isVerified}
                         />
                         <div className="px-3 py-2 text-sm bg-gray-100 border border-l-0 rounded-r">
                           €{" "}
@@ -372,12 +367,7 @@ export default function AccountCard({
         {/* Verification Status */}
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="flex items-center space-x-2">
-            {!account.isVerified ? (
-              <span className="flex items-center text-yellow-600">
-                <span className="w-2 h-2 rounded-full bg-yellow-400 mr-2"></span>
-                En attente de vérification
-              </span>
-            ) : !account.hideIdentity ? (
+            {!account.hideIdentity ? (
               <span className="flex items-center text-green-600">
                 <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
                 Visible dans le catalogue
@@ -396,7 +386,7 @@ export default function AccountCard({
       <PriceSuggestionModal
         isOpen={showPriceSuggestions}
         onClose={() => setShowPriceSuggestions(false)}
-        followers={account.followers}
+        followers={accountData.followers}
         onApply={(prices) => {
           onUpdate({
             prices: {

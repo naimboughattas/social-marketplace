@@ -101,7 +101,7 @@ export const refreshAccessToken = async (
 export const getUserInfo = async () => {
   const youtube = google.youtube("v3");
   const response = await youtube.channels.list({
-    part: ["snippet", "contentDetails"],
+    part: ["snippet", "contentDetails", "statistics"],
     mine: true,
     auth: oauth2Client,
   });
@@ -109,35 +109,28 @@ export const getUserInfo = async () => {
   const channels = response.data.items || [];
   if (channels.length === 0) return null;
 
-  const channelInfo = channels[0].snippet;
-  // console.log("User channel info:", channels[0]);
+  const channelSnippet = channels[0].snippet;
+  const channelId = channels[0].contentDetails?.relatedPlaylists?.uploads;
+  const channelStatistics = channels[0].statistics;
 
-  return channelInfo;
+  return {
+    channelId,
+    ...channelSnippet,
+    ...channelStatistics,
+  };
 };
 
 // Fetch user posts from YouTube
 export const getUserPosts = async () => {
   const youtube = google.youtube("v3");
 
-  const channelsResponse = await youtube.channels.list({
-    part: ["snippet", "contentDetails"],
-    mine: true,
-    auth: oauth2Client, // OAuth2 client
-  });
-
-  const channels = channelsResponse.data.items;
-
-  if (!channels || channels.length === 0) {
-    throw new Error("No channels found");
-  }
-
-  const channel = channels[0];
-  const playlistId = channel.contentDetails?.relatedPlaylists?.uploads;
+  const channel = await getUserInfo();
+  const playlistId = channel?.channelId;
 
   const response = await youtube.playlistItems.list({
     part: ["snippet", "contentDetails"],
     maxResults: 10,
-    playlistId, // Replace with the correct playlist ID
+    playlistId,
     auth: oauth2Client,
   });
 

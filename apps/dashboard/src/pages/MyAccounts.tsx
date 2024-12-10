@@ -47,10 +47,6 @@ export default function MyAccounts() {
   });
 
   const filteredAccounts = accounts.filter((account) => {
-    // Filtrer par onglet
-    if (currentTab === "verified" && !account.isVerified) return false;
-    if (currentTab === "pending" && account.isVerified) return false;
-
     // Filtrer par recherche
     if (
       search &&
@@ -129,63 +125,22 @@ export default function MyAccounts() {
           </div>
         </div>
 
-        <Tabs.Root
-          value={currentTab}
-          onValueChange={(value) => setCurrentTab(value as Tab)}
-        >
-          <Tabs.List className="flex space-x-1 border-b">
-            <Tabs.Trigger
-              value="all"
-              className={cn(
-                "px-4 py-2 text-sm font-medium border-b-2 -mb-px",
-                currentTab === "all"
-                  ? "border-purple-500 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              )}
-            >
-              Tous les comptes
-            </Tabs.Trigger>
-            <Tabs.Trigger
-              value="verified"
-              className={cn(
-                "px-4 py-2 text-sm font-medium border-b-2 -mb-px",
-                currentTab === "verified"
-                  ? "border-purple-500 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              )}
-            >
-              Comptes validés
-            </Tabs.Trigger>
-            <Tabs.Trigger
-              value="pending"
-              className={cn(
-                "px-4 py-2 text-sm font-medium border-b-2 -mb-px",
-                currentTab === "pending"
-                  ? "border-purple-500 text-purple-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              )}
-            >
-              En attente de validation
-            </Tabs.Trigger>
-          </Tabs.List>
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredAccounts.map((account) => (
+            <AccountCard
+              key={account.id}
+              account={account}
+              onUpdate={(updates) => handleUpdateAccount(account.id, updates)}
+              onDelete={() => handleDeleteAccount(account.id)}
+            />
+          ))}
 
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAccounts.map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                onUpdate={(updates) => handleUpdateAccount(account.id, updates)}
-                onDelete={() => handleDeleteAccount(account.id)}
-              />
-            ))}
-
-            {filteredAccounts.length === 0 && (
-              <div className="col-span-3 py-12 text-center text-gray-500">
-                Aucun compte trouvé
-              </div>
-            )}
-          </div>
-        </Tabs.Root>
+          {filteredAccounts.length === 0 && (
+            <div className="col-span-3 py-12 text-center text-gray-500">
+              Aucun compte trouvé
+            </div>
+          )}
+        </div>
 
         {showAddModal && (
           <AccountSettingsModal
