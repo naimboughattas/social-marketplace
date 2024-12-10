@@ -10,7 +10,7 @@ import {
   getSubscription,
 } from "../services/subscriptions";
 
-export function useSubscriptions() {
+export function useSubscriptions(type?: "influencer" | "customer") {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -23,9 +23,7 @@ export function useSubscriptions() {
     const fetchSubscriptions = async () => {
       try {
         setLoading(true);
-        const fetchedSubscriptions = await getSubscriptions({
-          filters: [["userId", "==", user.id]],
-        });
+        const fetchedSubscriptions = await getSubscriptions([], type, user.id);
         setSubscriptions(fetchedSubscriptions);
         setError(null);
       } catch (err) {
@@ -70,6 +68,28 @@ export function useSubscriptions() {
     }
   };
 
+  const handleUpdateSubscription = async (
+    subscriptionId: string,
+    updates: any
+  ) => {
+    try {
+      await updateSubscription(subscriptionId, updates);
+      setSubscriptions(
+        subscriptions.filter((acc) => acc.id !== subscriptionId)
+      );
+      addNotification({
+        type: "success",
+        message: "Subscription deleted successfully",
+      });
+    } catch (err) {
+      addNotification({
+        type: "error",
+        message: "Failed to delete subscription",
+      });
+      throw err;
+    }
+  };
+
   const handleDeleteSubscription = async (subscriptionId: string) => {
     try {
       await deleteSubscription(subscriptionId);
@@ -89,64 +109,20 @@ export function useSubscriptions() {
     }
   };
 
-  const handleStartVerification = async (subscriptionId: string) => {
-    try {
-      const verificationCode = `VERIFY-${Date.now().toString(
-        36
-      )}-${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
-      setSubscriptions(
-        subscriptions.map((acc) =>
-          acc.id === subscriptionId ? { ...acc, verificationSent: true } : acc
-        )
-      );
-      addNotification({
-        type: "success",
-        message: "Verification process started",
-      });
-    } catch (err) {
-      addNotification({
-        type: "error",
-        message: "Failed to start verification",
-      });
-      throw err;
-    }
-  };
-
-  const handleConfirmVerification = async (subscriptionId: string) => {
-    try {
-      setSubscriptions(
-        subscriptions.map((acc) =>
-          acc.id === subscriptionId ? { ...acc, isVerified: true } : acc
-        )
-      );
-      addNotification({
-        type: "success",
-        message: "Subscription verified successfully",
-      });
-    } catch (err) {
-      addNotification({
-        type: "error",
-        message: "Failed to verify subscription",
-      });
-      throw err;
-    }
-  };
-
   return {
     subscriptions,
     loading,
     error,
     handleCreateSubscription,
+    handleUpdateSubscription,
     handleDeleteSubscription,
-    handleStartVerification,
-    handleConfirmVerification,
   };
 }
 
 export function useSubscription(subscriptionId: string) {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
-  const [subscription, setSubscription] = useState<Subscription[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -179,7 +155,7 @@ export function useSubscription(subscriptionId: string) {
   ) => {
     try {
       await updateSubscription(subscriptionId, updates);
-      setSubscription((acc) => ({ ...acc, ...updates }));
+      setSubscription((acc) => acc && { ...acc, ...updates });
       addNotification({
         type: "success",
         message: "Subscription updated successfully",

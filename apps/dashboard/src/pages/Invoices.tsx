@@ -11,9 +11,11 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "../lib/utils";
 import { useInvoices } from "../lib/hooks/useInvoices";
+import { useBillingProfiles } from "../lib/hooks/useBillingProfiles";
+import { useAuth } from "../lib/auth";
 
 interface BillingProfile {
-  id: string;
+  userId: string;
   companyName: string;
   fullName: string;
   address: string;
@@ -42,6 +44,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 };
 
 export default function Invoices() {
+  const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [selectedTab, setSelectedTab] = useState(0);
   const [showAddProfile, setShowAddProfile] = useState(false);
@@ -54,16 +57,18 @@ export default function Invoices() {
   });
 
   // Charger les profils et factures depuis le localStorage
-  const [billingProfiles, setBillingProfiles] = useState<BillingProfile[]>(
-    () => {
-      const saved = localStorage.getItem("billing_profiles");
-      return saved ? JSON.parse(saved) : [];
-    }
-  );
+  const {
+    billingProfiles,
+    handleCreateBillingProfile,
+    handleDeleteBillingProfile,
+    handleUpdateBillingProfile,
+  } = useBillingProfiles();
+
+  console.log(billingProfiles);
 
   const { invoices } = useInvoices();
 
-  const handleAddProfile = () => {
+  const handleAddProfile = async () => {
     if (
       !newProfile.companyName ||
       !newProfile.address ||
@@ -78,7 +83,7 @@ export default function Invoices() {
     }
 
     const profile: BillingProfile = {
-      id: crypto.randomUUID(),
+      userId: user.id,
       companyName: newProfile.companyName!,
       fullName: newProfile.fullName!,
       address: newProfile.address!,
@@ -90,9 +95,10 @@ export default function Invoices() {
       isDefault: billingProfiles.length === 0,
     };
 
-    const updatedProfiles = [...billingProfiles, profile];
-    setBillingProfiles(updatedProfiles);
-    localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+    await handleCreateBillingProfile(profile);
+    // const updatedProfiles = [...billingProfiles, profile];
+    // setBillingProfiles(updatedProfiles);
+    // localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
 
     setNewProfile({
       country: "France",
@@ -105,15 +111,11 @@ export default function Invoices() {
     });
   };
 
-  const handleDeleteProfile = (id: string) => {
+  const handleDeleteProfile = async (id: string) => {
     if (
       confirm("Êtes-vous sûr de vouloir supprimer ce profil de facturation ?")
     ) {
-      const updatedProfiles = billingProfiles.filter(
-        (profile) => profile.id !== id
-      );
-      setBillingProfiles(updatedProfiles);
-      localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+      await handleDeleteBillingProfile(id);
 
       addNotification({
         type: "success",
@@ -122,13 +124,8 @@ export default function Invoices() {
     }
   };
 
-  const handleSetDefaultProfile = (id: string) => {
-    const updatedProfiles = billingProfiles.map((profile) => ({
-      ...profile,
-      isDefault: profile.id === id,
-    }));
-    setBillingProfiles(updatedProfiles);
-    localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+  const handleSetDefaultProfile = async (id: string) => {
+    await handleUpdateBillingProfile(id, { isDefault: true });
 
     addNotification({
       type: "success",

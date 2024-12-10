@@ -6,31 +6,9 @@ import {
   completeCampaign,
   disputeCampaign,
   getCampaigns,
+  updateCampaign,
 } from "../services/campaigns";
 import { useAuth } from "../auth";
-
-// Mock data
-const mockCampaigns: Campaign[] = [
-  {
-    id: "1",
-    orderNumber: 1,
-    date: new Date(),
-    platform: "instagram",
-    service: "follow",
-    target: "@target_account",
-    settings: {
-      category: "Fashion",
-      country: "France",
-      city: "Paris",
-      language: "French",
-      quantity: 50,
-    },
-    currentCount: 25,
-    status: "in_progress",
-    price: 4.0,
-    totalCost: 100.0, // 25 * 4.00
-  },
-];
 
 export function useCampaigns() {
   const { user } = useAuth();
@@ -45,9 +23,7 @@ export function useCampaigns() {
     const fetchAccounts = async () => {
       try {
         setLoading(true);
-        const fetchedCampaigns = await getCampaigns({
-          filters: [["userId", "==", user.id]],
-        });
+        const fetchedCampaigns = await getCampaigns([], user.id);
         setCampaigns(fetchedCampaigns);
         setError(null);
       } catch (err) {
@@ -63,6 +39,29 @@ export function useCampaigns() {
 
     fetchAccounts();
   }, [user]);
+
+  const handleUpdateCampaign = async (
+    accountId: string,
+    updates: Partial<any>
+  ) => {
+    try {
+      await updateCampaign(accountId, updates);
+      const updatedCampaigns = campaigns.map((campaign) =>
+        campaign.id === accountId ? { ...campaign, ...updates } : campaign
+      );
+      setCampaigns(updatedCampaigns);
+      addNotification({
+        type: "success",
+        message: "Account updated successfully",
+      });
+    } catch (err) {
+      addNotification({
+        type: "error",
+        message: "Failed to update account",
+      });
+      throw err;
+    }
+  };
 
   const handleDispute = async (campaignId: string, reason: string) => {
     const response = await disputeCampaign(campaignId, reason);
@@ -137,6 +136,7 @@ export function useCampaigns() {
 
   return {
     campaigns,
+    handleUpdateCampaign,
     handleDispute,
     handleAcceptDelivery,
     handleArchive,

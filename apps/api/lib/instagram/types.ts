@@ -5,6 +5,7 @@ export interface InstagramAccessTokenResponse {
 }
 
 export interface InstagramUserProfile {
+  id: string;
   user_id: string;
   username: string;
   name: string;
@@ -39,7 +40,7 @@ export const isInstagramAccessTokenResponse = (
     "access_token" in data &&
     typeof (data as any).access_token === "string" &&
     "user_id" in data &&
-    typeof (data as any).user_id === "number" 
+    typeof (data as any).user_id === "number"
   );
 };
 

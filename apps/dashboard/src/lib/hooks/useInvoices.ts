@@ -23,9 +23,7 @@ export function useInvoices() {
     const fetchInvoices = async () => {
       try {
         setLoading(true);
-        const fetchedInvoices = await getInvoices({
-          filters: [["userId", "==", user.id]],
-        });
+        const fetchedInvoices = await getInvoices([["userId", "==", user.id]]);
         setInvoices(fetchedInvoices);
         setError(null);
       } catch (err) {

@@ -71,7 +71,11 @@ export const refreshAccessToken = async (
 
 export const getUserInfo = async (accessToken: string) => {
   const response = await getInstagramUserProfile(accessToken);
-  return response;
+  delete (response as { id?: string }).id;
+  return {
+    pageId: response.id,
+    ...response,
+  };
 };
 
 export const getUserPosts = async (accessToken: string) => {

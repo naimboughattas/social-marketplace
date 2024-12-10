@@ -6,6 +6,7 @@ import {
   getDocuments,
   updateDocument,
 } from "../firebase";
+import { Account } from "../oauth/types";
 
 dotenv.config();
 
@@ -15,8 +16,15 @@ export const getById = async (campaignId: string) => {
 };
 
 // Récupérer tous les campaigns avec des filtres optionnels
-export const getAll = async (filters: any[]) => {
-  return await getDocuments("campaigns", filters);
+export const getAll = async (payload: any) => {
+  const { userId, filters } = payload;
+  const accounts = (
+    await getDocuments<Account>("accounts", [["userId", "==", userId]])
+  ).map((account) => account.id);
+  return await getDocuments("campaigns", [
+    ...filters,
+    userId && ["target", "in", accounts],
+  ]);
 };
 
 export const create = async (data: any) => {

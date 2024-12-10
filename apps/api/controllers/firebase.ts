@@ -63,7 +63,6 @@ export const getDocuments = async <T>(
   filters: any[] = []
 ): Promise<T[]> => {
   try {
-    console.log("Filters:", filters);
     const collectionRef = collection(db, collectionName);
     const q = filters.length
       ? query(

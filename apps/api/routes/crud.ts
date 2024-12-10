@@ -6,13 +6,14 @@ import * as Tickets from "../controllers/ressources/tickets";
 import * as Withdrawals from "../controllers/ressources/withdrawals";
 import * as Reviews from "../controllers/ressources/reviews";
 import * as Proposals from "../controllers/ressources/proposals";
+import * as Billings from "../controllers/ressources/billings";
 import * as Payments from "../controllers/ressources/payments";
 import * as Invoices from "../controllers/ressources/invoices";
 import * as Subscriptions from "../controllers/ressources/subscriptions";
 import * as Orders from "../controllers/ressources/orders";
 import * as Notifications from "../controllers/ressources/notifications";
 import { checkCache } from "../middleware";
-import { client, deleteCachedData } from "../lib/redis";
+import { deleteCachedData } from "../lib/redis";
 
 const router: Router = Router();
 
@@ -62,8 +63,7 @@ const createRoutes = (entityName: string, controller: any) => {
 
   router.post(`/${entityName}`, async (req, res) => {
     try {
-      const filters = req.body.filters || [];
-      const data = await controller.getAll(filters);
+      const data = await controller.getAll(req.body);
       res.json(data);
     } catch (error) {
       console.error(`Error fetching ${entityName}s:`, error);
@@ -77,6 +77,7 @@ createRoutes("accounts", Accounts);
 createRoutes("campaigns", Campaigns);
 createRoutes("notifications", Notifications);
 createRoutes("orders", Orders);
+createRoutes("billings", Billings);
 createRoutes("payments", Payments);
 createRoutes("invoices", Invoices);
 createRoutes("subscriptions", Subscriptions);

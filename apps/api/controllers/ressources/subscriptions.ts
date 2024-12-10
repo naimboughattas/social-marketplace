@@ -5,6 +5,7 @@ import {
   getDocuments,
   updateDocument,
 } from "../firebase";
+import { Account } from "../oauth/types";
 
 dotenv.config();
 
@@ -14,8 +15,18 @@ export const getById = async (subscriptionId: string) => {
 };
 
 // Récupérer tous les subscriptions avec des filtres optionnels
-export const getAll = async (filters: any[]) => {
-  return await getDocuments("subscriptions", filters);
+export const getAll = async (payload: any) => {
+  const { type, userId, filters } = payload;
+  if (!type) return await getDocuments("subscriptions", filters);
+  const accounts = (
+    await getDocuments<Account>("accounts", [["userId", "==", userId]])
+  ).map((account) => account.id);
+  if (type === "customer")
+    return await getDocuments("subscriptions", [["client.id", "in", accounts]]);
+  if (type === "influencer")
+    return await getDocuments("subscriptions", [
+      ["influencer.id", "in", accounts],
+    ]);
 };
 
 // Mettre à jour un subscription

@@ -25,7 +25,11 @@ export async function createSubscription(
 }
 
 // Récupérer tous les comptes d'un utilisateur avec des filtres
-export async function getSubscriptions(filters: any): Promise<Subscription[]> {
+export async function getSubscriptions(
+  filters?: any,
+  type?: string,
+  userId?: string
+): Promise<Subscription[]> {
   const response = await fetch(
     `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/subscriptions`,
     {
@@ -34,7 +38,11 @@ export async function getSubscriptions(filters: any): Promise<Subscription[]> {
         "Content-Type": "application/json",
         "ngrok-skip-browser-warning": "69420",
       }),
-      body: JSON.stringify(filters),
+      body: JSON.stringify({
+        userId,
+        type,
+        filters,
+      }),
     }
   );
 

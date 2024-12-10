@@ -12,7 +12,7 @@ import * as Linkedin from "../../oauth/linkedin";
 import * as Tiktok from "../../oauth/tiktok";
 import * as X from "../../oauth/x";
 import * as Youtube from "../../oauth/youtube";
-import { setCachedData } from "../../../lib/redis";
+import { getCachedData, setCachedData } from "../../../lib/redis";
 import {
   Account,
   FacebookAccount,
@@ -38,9 +38,7 @@ const providers = {
 export const getById = async (accountId: string) => {
   const baseAccountData = await getDocumentById<Account>("accounts", accountId);
   const token = await getAccountByPlatform(baseAccountData, accountId);
-  const [pageData] = await Promise.all([
-    providers[baseAccountData.platform].getUserPage(token),
-  ]);
+  const pageData = await providers[baseAccountData.platform].getUserPage(token);
 
   const account = {
     ...baseAccountData,
@@ -57,7 +55,14 @@ export const getById = async (accountId: string) => {
 
 // Récupérer tous les accounts avec des filtres optionnels
 export const getAll = async (filters: any[]) => {
-  return await getDocuments("accounts", filters);
+  const baseAccounts = await getDocuments<Account>("accounts", filters);
+  const accounts = await Promise.all(
+    baseAccounts.map(async (account) => {
+      const data = await getById(account.id);
+      return data;
+    })
+  );
+  return accounts;
 };
 
 // Mettre à jour un account

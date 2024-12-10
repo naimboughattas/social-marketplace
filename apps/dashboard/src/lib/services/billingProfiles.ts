@@ -1,12 +1,12 @@
-import { Invoice } from "../types/invoices";
+import { BillingProfile } from "../types/billingProfiles";
 
 // Créer un nouveau compte
-export async function createInvoice(
-  data: Omit<Invoice, "id" | "createdAt">,
+export async function createBillingProfile(
+  data: Omit<BillingProfile, "id" | "createdAt">,
   userId: string
 ): Promise<string> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/invoices/create`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/billings/create`,
     {
       method: "POST",
       headers: new Headers({
@@ -17,7 +17,7 @@ export async function createInvoice(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to create invoice");
+    throw new Error("Failed to create billing");
   }
 
   const result = await response.json();
@@ -25,9 +25,11 @@ export async function createInvoice(
 }
 
 // Récupérer tous les comptes d'un utilisateur avec des filtres
-export async function getInvoices(filters: any): Promise<Invoice[]> {
+export async function getBillingProfiles(
+  filters: any
+): Promise<BillingProfile[]> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/invoices`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/billings`,
     {
       method: "POST",
       headers: new Headers({
@@ -39,16 +41,18 @@ export async function getInvoices(filters: any): Promise<Invoice[]> {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch invoices");
+    throw new Error("Failed to fetch billings");
   }
 
   return await response.json();
 }
 
 // Récupérer un compte spécifique par ID
-export async function getInvoice(invoiceId: string): Promise<Invoice> {
+export async function getBillingProfile(
+  billingId: string
+): Promise<BillingProfile> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/invoices/${invoiceId}`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/billings/${billingId}`,
     {
       headers: new Headers({
         "ngrok-skip-browser-warning": "69420",
@@ -57,19 +61,19 @@ export async function getInvoice(invoiceId: string): Promise<Invoice> {
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch invoice with ID ${invoiceId}`);
+    throw new Error(`Failed to fetch billing with ID ${billingId}`);
   }
 
   return await response.json();
 }
 
 // Mettre à jour un compte
-export async function updateInvoice(
-  invoiceId: string,
-  updates: Partial<Invoice>
+export async function updateBillingProfile(
+  billingId: string,
+  updates: Partial<BillingProfile>
 ): Promise<void> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/invoices/${invoiceId}`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/billings/${billingId}`,
     {
       method: "PUT",
       headers: new Headers({
@@ -81,14 +85,14 @@ export async function updateInvoice(
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to update invoice with ID ${invoiceId}`);
+    throw new Error(`Failed to update billing with ID ${billingId}`);
   }
 }
 
 // Supprimer un compte (soft delete)
-export async function deleteInvoice(invoiceId: string): Promise<void> {
+export async function deleteBillingProfile(billingId: string): Promise<void> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/invoices/${invoiceId}`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/billings/${billingId}`,
     {
       method: "DELETE",
       headers: new Headers({
@@ -98,6 +102,6 @@ export async function deleteInvoice(invoiceId: string): Promise<void> {
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to delete invoice with ID ${invoiceId}`);
+    throw new Error(`Failed to delete billing with ID ${billingId}`);
   }
 }

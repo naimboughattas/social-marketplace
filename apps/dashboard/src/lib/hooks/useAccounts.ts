@@ -67,6 +67,29 @@ export function useAccounts() {
     }
   };
 
+  const handleUpdateAccount = async (
+    accountId: string,
+    updates: Partial<SocialAccount>
+  ) => {
+    try {
+      await updateAccount(accountId, updates);
+      const updatedAccounts = accounts.map((account) =>
+        account.id === accountId ? { ...account, ...updates } : account
+      );
+      setAccounts(updatedAccounts);
+      addNotification({
+        type: "success",
+        message: "Account updated successfully",
+      });
+    } catch (err) {
+      addNotification({
+        type: "error",
+        message: "Failed to update account",
+      });
+      throw err;
+    }
+  };
+
   const handleDeleteAccount = async (accountId: string) => {
     try {
       await deleteAccount(accountId);
@@ -84,57 +107,13 @@ export function useAccounts() {
     }
   };
 
-  const handleStartVerification = async (accountId: string) => {
-    try {
-      const verificationCode = `VERIFY-${Date.now().toString(
-        36
-      )}-${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
-      setAccounts(
-        accounts.map((acc) =>
-          acc.id === accountId ? { ...acc, verificationSent: true } : acc
-        )
-      );
-      addNotification({
-        type: "success",
-        message: "Verification process started",
-      });
-    } catch (err) {
-      addNotification({
-        type: "error",
-        message: "Failed to start verification",
-      });
-      throw err;
-    }
-  };
-
-  const handleConfirmVerification = async (accountId: string) => {
-    try {
-      setAccounts(
-        accounts.map((acc) =>
-          acc.id === accountId ? { ...acc, isVerified: true } : acc
-        )
-      );
-      addNotification({
-        type: "success",
-        message: "Account verified successfully",
-      });
-    } catch (err) {
-      addNotification({
-        type: "error",
-        message: "Failed to verify account",
-      });
-      throw err;
-    }
-  };
-
   return {
     accounts,
     loading,
     error,
     handleCreateAccount,
+    handleUpdateAccount,
     handleDeleteAccount,
-    handleStartVerification,
-    handleConfirmVerification,
   };
 }
 

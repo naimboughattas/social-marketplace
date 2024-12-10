@@ -34,7 +34,6 @@ export const getInstagramAccessToken = async (
 
   // Récupérer la réponse en JSON
   const tokenData: unknown = await response.json();
-  formData.append("tokenData", tokenData);
 
   // Vérification de la structure des données avec un type guard
   if (isInstagramAccessTokenResponse(tokenData)) {

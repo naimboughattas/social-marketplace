@@ -85,7 +85,8 @@ export default function Subscriptions() {
   );
   const [search, setSearch] = useState("");
   const [hasAutoRecharge, setHasAutoRecharge] = useState(false);
-  const { subscriptions } = useSubscriptions();
+  const { subscriptions, handleUpdateSubscription } =
+    useSubscriptions("customer");
 
   // Vérifier si le rechargement automatique est activé
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function Subscriptions() {
   const handleCancel = async (id: string) => {
     try {
       // API call to cancel subscription
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await handleUpdateSubscription(id, { status: "cancelled" });
 
       addNotification({
         type: "success",
@@ -119,7 +120,7 @@ export default function Subscriptions() {
   const handlePause = async (id: string) => {
     try {
       // API call to pause subscription
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await handleUpdateSubscription(id, { status: "paused" });
 
       addNotification({
         type: "success",

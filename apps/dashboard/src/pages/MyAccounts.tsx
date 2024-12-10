@@ -32,6 +32,7 @@ export default function MyAccounts() {
     loading: isFetching,
     error,
     handleCreateAccount,
+    handleUpdateAccount,
     handleDeleteAccount,
   } = useAccounts();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -172,7 +173,8 @@ export default function MyAccounts() {
             {filteredAccounts.map((account) => (
               <AccountCard
                 key={account.id}
-                accountId={account.id}
+                account={account}
+                onUpdate={(updates) => handleUpdateAccount(account.id, updates)}
                 onDelete={() => handleDeleteAccount(account.id)}
               />
             ))}

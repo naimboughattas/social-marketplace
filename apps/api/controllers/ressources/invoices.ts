@@ -14,7 +14,8 @@ export const getById = async (invoiceId: string) => {
 };
 
 // Récupérer tous les invoices avec des filtres optionnels
-export const getAll = async (filters: any[]) => {
+export const getAll = async (payload: any) => {
+  const { filters } = payload;
   return await getDocuments("invoices", filters);
 };
 

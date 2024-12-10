@@ -70,7 +70,10 @@ export async function createCampaign(
 }
 
 // Récupérer toutes les commandes d'un utilisateur
-export async function getCampaigns(filters: any): Promise<Campaign[]> {
+export async function getCampaigns(
+  filters?: any,
+  userId?: string
+): Promise<Campaign[]> {
   const response = await fetch(
     `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/campaigns`,
     {
@@ -78,7 +81,10 @@ export async function getCampaigns(filters: any): Promise<Campaign[]> {
       headers: new Headers({
         "Content-Type": "application/json",
       }),
-      body: JSON.stringify(filters),
+      body: JSON.stringify({
+        userId,
+        filters,
+      }),
     }
   );
 
@@ -87,14 +93,29 @@ export async function getCampaigns(filters: any): Promise<Campaign[]> {
   }
 
   const result = await response.json();
-  return result.campaigns.map((doc: any) => ({
-    id: doc.id,
-    ...doc,
-    createdAt: new Date(doc.createdAt),
-    acceptedAt: doc.acceptedAt ? new Date(doc.acceptedAt) : undefined,
-    deliveredAt: doc.deliveredAt ? new Date(doc.deliveredAt) : undefined,
-    completedAt: doc.completedAt ? new Date(doc.completedAt) : undefined,
-  })) as Campaign[];
+  return result;
+}
+
+// Mettre à jour un compte
+export async function updateCampaign(
+  campaignId: string,
+  updates: Partial<any>
+): Promise<void> {
+  const response = await fetch(
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/campaigns/${campaignId}`,
+    {
+      method: "PUT",
+      headers: new Headers({
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "69420",
+      }),
+      body: JSON.stringify(updates),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to update account with ID ${accountId}`);
+  }
 }
 
 // Accepter une commande

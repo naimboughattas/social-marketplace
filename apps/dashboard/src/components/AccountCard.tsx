@@ -89,19 +89,16 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
 };
 
 interface AccountCardProps {
-  accountId: string;
+  account: SocialAccount;
+  onUpdate: (updates: any) => void;
   onDelete: () => void;
 }
 
-export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
-  const {
-    account,
-    loading: isFetching,
-    handleUpdateAccount,
-  } = useAccount(accountId);
-  console.log(account);
-  const accountData =
-    !isFetching && formatAccountDataByPlatform(account.platform, account);
+export default function AccountCard({
+  account,
+  onUpdate,
+  onDelete,
+}: AccountCardProps) {
   const { addNotification } = useNotifications();
   const [isEditingLocation, setIsEditingLocation] = useState(false);
   const [showPriceSuggestions, setShowPriceSuggestions] = useState(false);
@@ -121,7 +118,7 @@ export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
       ? [...(account.availableServices || []), service]
       : (account.availableServices || []).filter((s) => s !== service);
 
-    handleUpdateAccount(accountId, {
+    onUpdate({
       availableServices: updatedServices,
       prices: {
         ...account.prices,
@@ -152,7 +149,7 @@ export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
     return service === "follow" ? "/ mois" : "/ post";
   };
 
-  if (isFetching) return <div>Loading...</div>;
+  if (!account) return <div>Loading...</div>;
   const canBeVisible = account.availableServices.length > 0;
 
   return (
@@ -162,8 +159,8 @@ export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
-              src={accountData.profile_picture_url}
-              alt={accountData.username}
+              src={account.profile_picture_url}
+              alt={account.username}
               className="h-12 w-12 rounded-full object-cover ring-2 ring-white"
             />
             <div>
@@ -173,17 +170,17 @@ export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
                   to={`/${account.platform}/${account.username}`}
                   className="font-medium text-purple-600 hover:text-purple-700"
                 >
-                  {accountData.username}
+                  {account.username}
                 </Link>
                 {account.isVerified && (
                   <CheckCircle className="h-4 w-4 text-blue-500" />
                 )}
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
-                <span>{formatFollowers(accountData.followers)} followers</span>
+                <span>{formatFollowers(account.followers)} followers</span>
                 <span>•</span>
                 <span>
-                  {accountData.city}, {accountData.country}
+                  {account.city}, {account.country}
                 </span>
               </div>
             </div>
@@ -225,7 +222,7 @@ export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
                   });
                   return;
                 }
-                handleUpdateAccount(accountId, { hideIdentity: checked });
+                onUpdate({ hideIdentity: checked });
               }}
               label={
                 <div className="flex items-center space-x-2">
@@ -249,7 +246,7 @@ export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
                   <Switch
                     checked={account.hideProfileImage}
                     onChange={(checked) =>
-                      handleUpdateAccount(accountId, {
+                      onUpdate(account.id, {
                         hideProfileImage: checked,
                       })
                     }
@@ -344,7 +341,7 @@ export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
                           type="number"
                           value={account.prices[service] || ""}
                           onChange={(e) =>
-                            handleUpdateAccount(accountId, {
+                            onUpdate({
                               prices: {
                                 ...account.prices,
                                 [service]: parseFloat(e.target.value),
@@ -401,7 +398,7 @@ export default function AccountCard({ accountId, onDelete }: AccountCardProps) {
         onClose={() => setShowPriceSuggestions(false)}
         followers={account.followers}
         onApply={(prices) => {
-          handleUpdateAccount(accountId, {
+          onUpdate({
             prices: {
               ...account.prices,
               ...prices,

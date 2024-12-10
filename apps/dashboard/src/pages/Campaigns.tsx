@@ -92,13 +92,12 @@ export default function Campaigns() {
   const [showNewCampaign, setShowNewCampaign] = useState(false);
   const [filters, setFilters] = useState<CampaignFilters>(defaultFilters);
 
-  const { campaigns, handleDispute, handleAcceptDelivery, handleArchive } =
-    useCampaigns();
+  const { campaigns, handleUpdateCampaign } = useCampaigns();
 
   const handleCancel = async (id: string) => {
     try {
       // API call to cancel campaign
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await handleUpdateCampaign(id, { status: "cancelled" });
 
       addNotification({
         type: "success",
@@ -145,6 +144,8 @@ export default function Campaigns() {
 
     return true;
   });
+
+  console.log("filteredCampaigns", filteredCampaigns);
 
   return (
     <DashboardLayout>
