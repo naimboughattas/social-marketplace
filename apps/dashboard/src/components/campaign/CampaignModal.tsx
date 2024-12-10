@@ -170,8 +170,8 @@ export default function CampaignModal({
         selectedService === "comment"
           ? "comment"
           : selectedService === "follow" || interactionType === "future"
-          ? "target"
-          : "posts",
+            ? "target"
+            : "posts",
       confirmation: "settings",
       intro: "intro",
     };
@@ -199,7 +199,6 @@ export default function CampaignModal({
 
       // Créer la campagne
       addItem({
-        id: crypto.randomUUID(),
         influencerUsername: "CAMPAIGN",
         service: selectedService,
         price: settings.maxCostPerInteraction,

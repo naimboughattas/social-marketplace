@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Plus, Building2, X } from 'lucide-react';
-import Button from '../Button';
-import Input from '../Input';
-import AddressAutocomplete from '../AddressAutocomplete';
-import { useNotifications } from '../../lib/notifications';
+import { useState } from "react";
+import { Plus, Building2, X } from "lucide-react";
+import Button from "../Button";
+import Input from "../Input";
+import AddressAutocomplete from "../AddressAutocomplete";
+import { useNotifications } from "../../lib/notifications";
+import { useBillingProfiles } from "../../lib/hooks/useBillingProfiles";
 
 interface BillingProfile {
   id: string;
@@ -19,20 +20,28 @@ interface BillingProfile {
 
 export default function BillingProfileList() {
   const { addNotification } = useNotifications();
-  const [profiles, setProfiles] = useState<BillingProfile[]>(() => {
-    const saved = localStorage.getItem('billing_profiles');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const {
+    billingProfiles: profiles,
+    handleCreateBillingProfile,
+    handleUpdateBillingProfile,
+    handleDeleteBillingProfile,
+  } = useBillingProfiles();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newProfile, setNewProfile] = useState<Partial<BillingProfile>>({
-    country: 'France'
+    country: "France",
   });
 
-  const handleAddProfile = () => {
-    if (!newProfile.companyName || !newProfile.fullName || !newProfile.address || !newProfile.city || !newProfile.zipCode) {
+  const handleAddProfile = async () => {
+    if (
+      !newProfile.companyName ||
+      !newProfile.fullName ||
+      !newProfile.address ||
+      !newProfile.city ||
+      !newProfile.zipCode
+    ) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez remplir tous les champs obligatoires'
+        type: "error",
+        message: "Veuillez remplir tous les champs obligatoires",
       });
       return;
     }
@@ -46,44 +55,48 @@ export default function BillingProfileList() {
       zipCode: newProfile.zipCode!,
       country: newProfile.country!,
       taxId: newProfile.taxId,
-      isDefault: profiles.length === 0
+      isDefault: profiles.length === 0,
     };
 
+    await handleCreateBillingProfile(profile);
+
     const updatedProfiles = [...profiles, profile];
-    setProfiles(updatedProfiles);
-    localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-    
-    setNewProfile({ country: 'France' });
+    // setProfiles(updatedProfiles);
+    localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+
+    setNewProfile({ country: "France" });
     setShowAddForm(false);
-    
+
     addNotification({
-      type: 'success',
-      message: 'Profil de facturation ajouté avec succès'
+      type: "success",
+      message: "Profil de facturation ajouté avec succès",
     });
   };
 
-  const handleDelete = (id: string) => {
-    const updatedProfiles = profiles.filter(p => p.id !== id);
-    setProfiles(updatedProfiles);
-    localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-    
+  const handleDelete = async (id: string) => {
+    await handleDeleteBillingProfile(id);
+    // const updatedProfiles = profiles.filter((p) => p.id !== id);
+    // setProfiles(updatedProfiles);
+    // localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+
     addNotification({
-      type: 'success',
-      message: 'Profil de facturation supprimé'
+      type: "success",
+      message: "Profil de facturation supprimé",
     });
   };
 
-  const handleSetDefault = (id: string) => {
-    const updatedProfiles = profiles.map(p => ({
-      ...p,
-      isDefault: p.id === id
-    }));
-    setProfiles(updatedProfiles);
-    localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-    
+  const handleSetDefault = async (id: string) => {
+    await handleUpdateBillingProfile(id, { isDefault: true });
+    // const updatedProfiles = profiles.map((p) => ({
+    //   ...p,
+    //   isDefault: p.id === id,
+    // }));
+    // setProfiles(updatedProfiles);
+    // localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
+
     addNotification({
-      type: 'success',
-      message: 'Profil de facturation par défaut mis à jour'
+      type: "success",
+      message: "Profil de facturation par défaut mis à jour",
     });
   };
 
@@ -100,7 +113,9 @@ export default function BillingProfileList() {
               <div className="text-sm text-gray-500">
                 <p>{profile.fullName}</p>
                 <p>{profile.address}</p>
-                <p>{profile.zipCode} {profile.city}</p>
+                <p>
+                  {profile.zipCode} {profile.city}
+                </p>
                 <p>{profile.country}</p>
                 {profile.taxId && <p>N° TVA : {profile.taxId}</p>}
               </div>
@@ -145,7 +160,9 @@ export default function BillingProfileList() {
       ) : (
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="mb-4 flex justify-between items-center">
-            <h3 className="text-lg font-medium">Nouveau profil de facturation</h3>
+            <h3 className="text-lg font-medium">
+              Nouveau profil de facturation
+            </h3>
             <button onClick={() => setShowAddForm(false)}>
               <X className="h-6 w-6 text-gray-400" />
             </button>
@@ -154,21 +171,25 @@ export default function BillingProfileList() {
           <div className="space-y-4">
             <Input
               label="Nom de l'entreprise"
-              value={newProfile.companyName || ''}
-              onChange={(e) => setNewProfile({
-                ...newProfile,
-                companyName: e.target.value
-              })}
+              value={newProfile.companyName || ""}
+              onChange={(e) =>
+                setNewProfile({
+                  ...newProfile,
+                  companyName: e.target.value,
+                })
+              }
               required
             />
 
             <Input
               label="Nom complet"
-              value={newProfile.fullName || ''}
-              onChange={(e) => setNewProfile({
-                ...newProfile,
-                fullName: e.target.value
-              })}
+              value={newProfile.fullName || ""}
+              onChange={(e) =>
+                setNewProfile({
+                  ...newProfile,
+                  fullName: e.target.value,
+                })
+              }
               required
             />
 
@@ -179,30 +200,27 @@ export default function BillingProfileList() {
                   address: address.street,
                   city: address.city,
                   zipCode: address.zipCode,
-                  country: address.country
+                  country: address.country,
                 });
               }}
             />
 
             <Input
               label="Numéro de TVA (optionnel)"
-              value={newProfile.taxId || ''}
-              onChange={(e) => setNewProfile({
-                ...newProfile,
-                taxId: e.target.value
-              })}
+              value={newProfile.taxId || ""}
+              onChange={(e) =>
+                setNewProfile({
+                  ...newProfile,
+                  taxId: e.target.value,
+                })
+              }
             />
 
             <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddForm(false)}
-              >
+              <Button variant="outline" onClick={() => setShowAddForm(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleAddProfile}>
-                Ajouter
-              </Button>
+              <Button onClick={handleAddProfile}>Ajouter</Button>
             </div>
           </div>
         </div>

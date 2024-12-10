@@ -4,6 +4,7 @@ import { Order } from "../types/orders";
 import {
   acceptOrder,
   completeOrder,
+  createOrder,
   disputeOrder,
   getOrders,
 } from "../../lib/services/orders";
@@ -38,6 +39,31 @@ export function useOrders() {
 
     fetchAccounts();
   }, [user]);
+
+  const handleCreateOrder = async (
+    orderData: Omit<Order, "id" | "createdAt">
+  ) => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      const orderId = await createOrder(orderData, user.id);
+      const newOrder = { id: orderId, ...orderData };
+      setOrders([...orders, newOrder]);
+      addNotification({
+        type: "success",
+        message: "BillingProfile created successfully",
+      });
+      return orderId;
+    } catch (err) {
+      addNotification({
+        type: "error",
+        message: "Failed to create billingprofile",
+      });
+      throw err;
+    }
+  };
 
   const handleDispute = async (orderId: string, reason: string) => {
     const response = await disputeOrder(orderId, reason);
@@ -112,6 +138,7 @@ export function useOrders() {
 
   return {
     orders,
+    handleCreateOrder,
     handleDispute,
     handleAcceptDelivery,
     handleArchive,
