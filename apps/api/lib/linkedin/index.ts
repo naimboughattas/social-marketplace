@@ -22,7 +22,6 @@ export const getLinkedInUserProfile = async (
 
     // Récupérer la réponse en JSON
     const userData: unknown = await response.json();
-    console.log("LinkedIn User Profile:", userData);  
 
     // Vérification de la structure des données avec un type guard
     if (isLinkedInUserProfile(userData)) {

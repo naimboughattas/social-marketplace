@@ -33,7 +33,6 @@ export const refreshFacebookAccessToken = async (
 
   // Récupérer la réponse en JSON
   const data: unknown = await response.json();
-  console.log("TikTok Access Token:", data);
 
   // Vérification de la structure des données avec un type guard
   if (isTikTokAccessTokenResponse(data)) {

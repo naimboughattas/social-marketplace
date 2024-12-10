@@ -25,7 +25,6 @@ export const getInstagramAccessToken = async (
   formData.append("code", code);
   formData.append("grant_type", "authorization_code");
   formData.append("redirect_uri", REDIRECT_URI);
-  console.log(formData);
 
   const response = await fetch(url, {
     method: "POST",
@@ -54,7 +53,6 @@ export const exchangeInstagramAccessToken = async (
 
     // Récupérer la réponse en JSON et l'assertion de type
     const refreshData = (await response.json()) as InstagramAccessTokenResponse;
-    console.log("Instagram Access Token Exchanged:", refreshData);
 
     return refreshData;
   } catch (error) {
@@ -73,7 +71,6 @@ export const refreshInstagramAccessToken = async (
 
     // Récupérer la réponse en JSON et l'assertion de type
     const refreshData = (await response.json()) as InstagramAccessTokenResponse;
-    console.log("Instagram Access Token Refreshed:", refreshData);
 
     return refreshData;
   } catch (error) {

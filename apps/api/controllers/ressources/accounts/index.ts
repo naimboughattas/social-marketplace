@@ -54,7 +54,8 @@ export const getById = async (accountId: string) => {
 };
 
 // Récupérer tous les accounts avec des filtres optionnels
-export const getAll = async (filters: any[]) => {
+export const getAll = async (payload: any) => {
+  const { filters } = payload;
   const baseAccounts = await getDocuments<Account>("accounts", filters);
   const accounts = await Promise.all(
     baseAccounts.map(async (account) => {

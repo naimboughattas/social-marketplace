@@ -68,7 +68,7 @@ export const getDocuments = async <T>(
       ? query(
           collectionRef,
           ...filters.map((f) => where(f[0], f[1], f[2])),
-          where("deletedAt", "==", null)
+          where("deletedAt", "==", null),
         )
       : query(collectionRef, where("deletedAt", "==", null));
 
