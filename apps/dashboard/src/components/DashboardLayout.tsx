@@ -16,13 +16,24 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  // const { state } = useCart();
-  // console.log(state);
+  const { state } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed');
     return saved ? JSON.parse(saved) : false;
   });
+
+  // Force re-render when user data changes
+  const [, setForceUpdate] = useState({});
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        setForceUpdate({});
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(isSidebarCollapsed));
@@ -138,7 +149,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   size="sm"
                   onClick={() => setIsCartOpen(true)}
                 >
-                  {/* Panier ({state?.items?.length}) */}
+                  Panier ({state.items.length})
                 </Button>
               </div>
             </div>

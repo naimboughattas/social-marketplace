@@ -1,17 +1,19 @@
-import { useState } from 'react';
-import { Tab } from '@headlessui/react';
-import { Building2, Wallet, Plus, X, Coins } from 'lucide-react';
-import DashboardLayout from '../components/DashboardLayout';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import { useAuth } from '../lib/auth';
-import { useNotifications } from '../lib/notifications';
-import AddressAutocomplete from '../components/AddressAutocomplete';
-import { cn } from '../lib/utils';
+import { useState } from "react";
+import { Tab } from "@headlessui/react";
+import { Building2, Wallet, Plus, X, Coins } from "lucide-react";
+import DashboardLayout from "../components/DashboardLayout";
+import Button from "../components/Button";
+import Input from "../components/Input";
+import { useAuth } from "../lib/auth";
+import { useNotifications } from "../lib/notifications";
+import AddressAutocomplete from "../components/AddressAutocomplete";
+import { cn } from "../lib/utils";
+import { useBillingProfiles } from "../lib/hooks/useBillingProfiles";
+import { useWithdraws } from "../lib/hooks/useWithdraws";
 
 interface WithdrawMethod {
   id: string;
-  type: 'bank' | 'paypal';
+  type: "bank" | "paypal";
   name: string;
   details: {
     iban?: string;
@@ -39,36 +41,48 @@ export default function Withdraw() {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [selectedTab, setSelectedTab] = useState(0);
-  const [amount, setAmount] = useState('');
-  const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState<string | null>(null);
-  const [selectedBillingProfile, setSelectedBillingProfile] = useState<string | null>(null);
+  const [amount, setAmount] = useState("");
+  const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState<
+    string | null
+  >(null);
+  const [selectedBillingProfile, setSelectedBillingProfile] = useState<
+    string | null
+  >(null);
 
   // États pour les modales
   const [showAddWithdrawMethod, setShowAddWithdrawMethod] = useState(false);
   const [showAddBillingProfile, setShowAddBillingProfile] = useState(false);
 
   // États pour les formulaires
-  const [newWithdrawMethod, setNewWithdrawMethod] = useState<Partial<WithdrawMethod>>({});
-  const [newBillingProfile, setNewBillingProfile] = useState<Partial<BillingProfile>>({
-    country: 'France'
+  const [newWithdrawMethod, setNewWithdrawMethod] = useState<
+    Partial<WithdrawMethod>
+  >({});
+  const [newBillingProfile, setNewBillingProfile] = useState<
+    Partial<BillingProfile>
+  >({
+    country: "France",
   });
 
   // Charger les méthodes et profils depuis le localStorage
-  const [withdrawMethods, setWithdrawMethods] = useState<WithdrawMethod[]>(() => {
-    const saved = localStorage.getItem('withdraw_methods');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const {
+    withdraws: withdrawMethods,
+    handleCreateWithdraw,
+    handleUpdateWithdraw,
+  } = useWithdraws();
 
-  const [billingProfiles, setBillingProfiles] = useState<BillingProfile[]>(() => {
-    const saved = localStorage.getItem('billing_profiles');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const {
+    billingProfiles,
+    handleCreateBillingProfile,
+    handleDeleteBillingProfile,
+    handleUpdateBillingProfile,
+  } = useBillingProfiles();
 
   const handleWithdraw = async () => {
     if (!selectedWithdrawMethod || !selectedBillingProfile) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez sélectionner une méthode de retrait et un profil de facturation'
+        type: "error",
+        message:
+          "Veuillez sélectionner une méthode de retrait et un profil de facturation",
       });
       return;
     }
@@ -76,81 +90,81 @@ export default function Withdraw() {
     const withdrawAmount = parseFloat(amount);
     if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
       addNotification({
-        type: 'error',
-        message: 'Montant invalide'
+        type: "error",
+        message: "Montant invalide",
       });
       return;
     }
 
     if (withdrawAmount > (user?.pendingBalance || 0)) {
       addNotification({
-        type: 'error',
-        message: 'Montant supérieur à vos gains disponibles'
+        type: "error",
+        message: "Montant supérieur à vos gains disponibles",
       });
       return;
     }
 
     try {
       // Simuler l'appel API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       addNotification({
-        type: 'success',
-        message: 'Demande de retrait envoyée avec succès'
+        type: "success",
+        message: "Demande de retrait envoyée avec succès",
       });
 
-      setAmount('');
+      setAmount("");
       setSelectedWithdrawMethod(null);
       setSelectedBillingProfile(null);
     } catch (error) {
       addNotification({
-        type: 'error',
-        message: 'Erreur lors de la demande de retrait'
+        type: "error",
+        message: "Erreur lors de la demande de retrait",
       });
     }
   };
 
-  const handleAddWithdrawMethod = () => {
+  const handleAddWithdrawMethod = async () => {
     if (!newWithdrawMethod.type || !newWithdrawMethod.details) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez remplir tous les champs requis'
+        type: "error",
+        message: "Veuillez remplir tous les champs requis",
       });
       return;
     }
 
     const method: WithdrawMethod = {
-      id: crypto.randomUUID(),
       type: newWithdrawMethod.type,
       name: newWithdrawMethod.name!,
       details: newWithdrawMethod.details,
-      isDefault: withdrawMethods.length === 0
+      isDefault: withdrawMethods.length === 0,
     };
+    await handleCreateWithdraw(method);
 
-    const updatedMethods = [...withdrawMethods, method];
-    setWithdrawMethods(updatedMethods);
-    localStorage.setItem('withdraw_methods', JSON.stringify(updatedMethods));
-    
     setNewWithdrawMethod({});
     setShowAddWithdrawMethod(false);
-    
+
     addNotification({
-      type: 'success',
-      message: 'Méthode de retrait ajoutée avec succès'
+      type: "success",
+      message: "Méthode de retrait ajoutée avec succès",
     });
   };
 
-  const handleAddBillingProfile = () => {
-    if (!newBillingProfile.companyName || !newBillingProfile.address || !newBillingProfile.city || !newBillingProfile.zipCode) {
+  const handleAddBillingProfile = async () => {
+    if (
+      !newBillingProfile.companyName ||
+      !newBillingProfile.address ||
+      !newBillingProfile.city ||
+      !newBillingProfile.zipCode
+    ) {
       addNotification({
-        type: 'error',
-        message: 'Veuillez remplir tous les champs obligatoires'
+        type: "error",
+        message: "Veuillez remplir tous les champs obligatoires",
       });
       return;
     }
 
     const profile: BillingProfile = {
-      id: crypto.randomUUID(),
       companyName: newBillingProfile.companyName!,
       fullName: newBillingProfile.fullName!,
       address: newBillingProfile.address!,
@@ -159,75 +173,65 @@ export default function Withdraw() {
       zipCode: newBillingProfile.zipCode!,
       country: newBillingProfile.country!,
       taxId: newBillingProfile.taxId,
-      isDefault: billingProfiles.length === 0
+      isDefault: billingProfiles.length === 0,
     };
 
-    const updatedProfiles = [...billingProfiles, profile];
-    setBillingProfiles(updatedProfiles);
-    localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-    
+    await handleCreateBillingProfile(profile);
     setNewBillingProfile({
-      country: 'France'
+      country: "France",
     });
     setShowAddBillingProfile(false);
-    
+
     addNotification({
-      type: 'success',
-      message: 'Profil de facturation ajouté avec succès'
+      type: "success",
+      message: "Profil de facturation ajouté avec succès",
     });
   };
 
-  const handleDeleteWithdrawMethod = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette méthode de retrait ?')) {
-      const updatedMethods = withdrawMethods.filter(method => method.id !== id);
-      setWithdrawMethods(updatedMethods);
-      localStorage.setItem('withdraw_methods', JSON.stringify(updatedMethods));
-      
+  const handleDeleteWithdrawMethod = async (id: string) => {
+    if (
+      confirm("Êtes-vous sûr de vouloir supprimer cette méthode de retrait ?")
+    ) {
+      await handleDeleteWithdrawMethod(id);
+
       addNotification({
-        type: 'success',
-        message: 'Méthode de retrait supprimée'
+        type: "success",
+        message: "Méthode de retrait supprimée",
       });
     }
   };
 
-  const handleDeleteBillingProfile = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce profil de facturation ?')) {
-      const updatedProfiles = billingProfiles.filter(profile => profile.id !== id);
-      setBillingProfiles(updatedProfiles);
-      localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-      
-      addNotification({
-        type: 'success',
-        message: 'Profil de facturation supprimé'
-      });
-    }
-  };
+  // const handleDeleteBillingProfile = (id: string) => {
+  //   if (
+  //     confirm("Êtes-vous sûr de vouloir supprimer ce profil de facturation ?")
+  //   ) {
+  //     const updatedProfiles = billingProfiles.filter(
+  //       (profile) => profile.id !== id
+  //     );
+  //     setBillingProfiles(updatedProfiles);
+  //     localStorage.setItem("billing_profiles", JSON.stringify(updatedProfiles));
 
-  const handleSetDefaultWithdrawMethod = (id: string) => {
-    const updatedMethods = withdrawMethods.map(method => ({
-      ...method,
-      isDefault: method.id === id
-    }));
-    setWithdrawMethods(updatedMethods);
-    localStorage.setItem('withdraw_methods', JSON.stringify(updatedMethods));
-    
+  //     addNotification({
+  //       type: "success",
+  //       message: "Profil de facturation supprimé",
+  //     });
+  //   }
+  // };
+
+  const handleSetDefaultWithdrawMethod = async (id: string) => {
+    await handleUpdateWithdraw(id, { isDefault: true });
+
     addNotification({
-      type: 'success',
-      message: 'Méthode de retrait par défaut mise à jour'
+      type: "success",
+      message: "Méthode de retrait par défaut mise à jour",
     });
   };
 
-  const handleSetDefaultBillingProfile = (id: string) => {
-    const updatedProfiles = billingProfiles.map(profile => ({
-      ...profile,
-      isDefault: profile.id === id
-    }));
-    setBillingProfiles(updatedProfiles);
-    localStorage.setItem('billing_profiles', JSON.stringify(updatedProfiles));
-    
+  const handleSetDefaultBillingProfile = async (id: string) => {
+    await handleUpdateBillingProfile(id, { isDefault: true });
     addNotification({
-      type: 'success',
-      message: 'Profil de facturation par défaut mis à jour'
+      type: "success",
+      message: "Profil de facturation par défaut mis à jour",
     });
   };
 
@@ -238,7 +242,7 @@ export default function Withdraw() {
       city: address.city,
       region: address.region,
       zipCode: address.zipCode,
-      country: address.country
+      country: address.country,
     });
   };
 
@@ -246,12 +250,12 @@ export default function Withdraw() {
   const calculateAmounts = (amount: number) => {
     const commission = amount * 0.15; // 15% commission
     const netAmount = amount - commission;
-    const tva = netAmount * 0.20; // 20% TVA
+    const tva = netAmount * 0.2; // 20% TVA
     return {
       commission,
       netAmount,
       tva,
-      total: amount
+      total: amount,
     };
   };
 
@@ -259,7 +263,9 @@ export default function Withdraw() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Retirer mes gains</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Retirer mes gains
+          </h2>
           <p className="mt-1 text-sm text-gray-500">
             Gérez vos retraits et informations de paiement
           </p>
@@ -270,11 +276,11 @@ export default function Withdraw() {
             <Tab
               className={({ selected }) =>
                 cn(
-                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2',
+                  "w-full rounded-lg py-2.5 text-sm font-medium leading-5",
+                  "ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2",
                   selected
-                    ? 'bg-white text-purple-700 shadow'
-                    : 'text-purple-600 hover:bg-white/[0.12] hover:text-purple-800'
+                    ? "bg-white text-purple-700 shadow"
+                    : "text-purple-600 hover:bg-white/[0.12] hover:text-purple-800"
                 )
               }
             >
@@ -283,11 +289,11 @@ export default function Withdraw() {
             <Tab
               className={({ selected }) =>
                 cn(
-                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2',
+                  "w-full rounded-lg py-2.5 text-sm font-medium leading-5",
+                  "ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2",
                   selected
-                    ? 'bg-white text-purple-700 shadow'
-                    : 'text-purple-600 hover:bg-white/[0.12] hover:text-purple-800'
+                    ? "bg-white text-purple-700 shadow"
+                    : "text-purple-600 hover:bg-white/[0.12] hover:text-purple-800"
                 )
               }
             >
@@ -296,11 +302,11 @@ export default function Withdraw() {
             <Tab
               className={({ selected }) =>
                 cn(
-                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                  'ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2',
+                  "w-full rounded-lg py-2.5 text-sm font-medium leading-5",
+                  "ring-white ring-opacity-60 ring-offset-2 ring-offset-purple-400 focus:outline-none focus:ring-2",
                   selected
-                    ? 'bg-white text-purple-700 shadow'
-                    : 'text-purple-600 hover:bg-white/[0.12] hover:text-purple-800'
+                    ? "bg-white text-purple-700 shadow"
+                    : "text-purple-600 hover:bg-white/[0.12] hover:text-purple-800"
                 )
               }
             >
@@ -343,16 +349,27 @@ export default function Withdraw() {
                         return (
                           <>
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-500">Montant brut</span>
+                              <span className="text-gray-500">
+                                Montant brut
+                              </span>
                               <span>{parseFloat(amount).toFixed(2)} €</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-500">Commission (15%)</span>
-                              <span className="text-red-600">-{amounts.commission.toFixed(2)} €</span>
+                              <span className="text-gray-500">
+                                Commission (15%)
+                              </span>
+                              <span className="text-red-600">
+                                -{amounts.commission.toFixed(2)} €
+                              </span>
                             </div>
                             <div className="flex justify-between text-base font-medium border-t pt-2">
                               <span>Montant net</span>
-                              <span>{amounts.netAmount.toFixed(2)} € <span className="text-sm font-normal text-gray-500">(dont TVA {amounts.tva.toFixed(2)} €)</span></span>
+                              <span>
+                                {amounts.netAmount.toFixed(2)} €{" "}
+                                <span className="text-sm font-normal text-gray-500">
+                                  (dont TVA {amounts.tva.toFixed(2)} €)
+                                </span>
+                              </span>
                             </div>
                           </>
                         );
@@ -371,7 +388,8 @@ export default function Withdraw() {
                           Aucune méthode de retrait
                         </h3>
                         <p className="mt-1 text-sm text-gray-500">
-                          Commencez par ajouter une méthode de retrait pour recevoir vos gains
+                          Commencez par ajouter une méthode de retrait pour
+                          recevoir vos gains
                         </p>
                         <Button
                           className="mt-4"
@@ -387,30 +405,40 @@ export default function Withdraw() {
                             key={method.id}
                             className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer ${
                               selectedWithdrawMethod === method.id
-                                ? 'border-purple-600 bg-purple-50'
-                                : 'border-gray-200'
+                                ? "border-purple-600 bg-purple-50"
+                                : "border-gray-200"
                             }`}
                             onClick={() => setSelectedWithdrawMethod(method.id)}
                           >
                             <div className="flex items-center">
-                              {method.type === 'bank' && <Building2 className="h-5 w-5 text-gray-400 mr-3" />}
-                              {method.type === 'paypal' && <Wallet className="h-5 w-5 text-gray-400 mr-3" />}
+                              {method.type === "bank" && (
+                                <Building2 className="h-5 w-5 text-gray-400 mr-3" />
+                              )}
+                              {method.type === "paypal" && (
+                                <Wallet className="h-5 w-5 text-gray-400 mr-3" />
+                              )}
                               <div>
-                                <p className="font-medium text-gray-900">{method.name}</p>
-                                {method.type === 'bank' && (
+                                <p className="font-medium text-gray-900">
+                                  {method.name}
+                                </p>
+                                {method.type === "bank" && (
                                   <p className="text-sm text-gray-500">
                                     IBAN: •••• {method.details.iban?.slice(-4)}
                                   </p>
                                 )}
-                                {method.type === 'paypal' && (
-                                  <p className="text-sm text-gray-500">{method.details.paypalEmail}</p>
+                                {method.type === "paypal" && (
+                                  <p className="text-sm text-gray-500">
+                                    {method.details.paypalEmail}
+                                  </p>
                                 )}
                               </div>
                             </div>
                             <input
                               type="radio"
                               checked={selectedWithdrawMethod === method.id}
-                              onChange={() => setSelectedWithdrawMethod(method.id)}
+                              onChange={() =>
+                                setSelectedWithdrawMethod(method.id)
+                              }
                               className="h-4 w-4 text-purple-600 focus:ring-purple-500"
                             />
                           </div>
@@ -430,7 +458,8 @@ export default function Withdraw() {
                           Aucun profil de facturation
                         </h3>
                         <p className="mt-1 text-sm text-gray-500">
-                          Ajoutez un profil de facturation pour pouvoir retirer vos gains
+                          Ajoutez un profil de facturation pour pouvoir retirer
+                          vos gains
                         </p>
                         <Button
                           className="mt-4"
@@ -446,21 +475,28 @@ export default function Withdraw() {
                             key={profile.id}
                             className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer ${
                               selectedBillingProfile === profile.id
-                                ? 'border-purple-600 bg-purple-50'
-                                : 'border-gray-200'
+                                ? "border-purple-600 bg-purple-50"
+                                : "border-gray-200"
                             }`}
-                            onClick={() => setSelectedBillingProfile(profile.id)}
+                            onClick={() =>
+                              setSelectedBillingProfile(profile.id)
+                            }
                           >
                             <div>
-                              <p className="font-medium text-gray-900">{profile.companyName}</p>
+                              <p className="font-medium text-gray-900">
+                                {profile.companyName}
+                              </p>
                               <p className="text-sm text-gray-500">
-                                {profile.address}, {profile.zipCode} {profile.city}
+                                {profile.address}, {profile.zipCode}{" "}
+                                {profile.city}
                               </p>
                             </div>
                             <input
                               type="radio"
                               checked={selectedBillingProfile === profile.id}
-                              onChange={() => setSelectedBillingProfile(profile.id)}
+                              onChange={() =>
+                                setSelectedBillingProfile(profile.id)
+                              }
                               className="h-4 w-4 text-purple-600 focus:ring-purple-500"
                             />
                           </div>
@@ -507,17 +543,25 @@ export default function Withdraw() {
                         </span>
                       )}
                       <div className="flex items-center space-x-4">
-                        {method.type === 'bank' && <Building2 className="h-8 w-8 text-gray-400" />}
-                        {method.type === 'paypal' && <Wallet className="h-8 w-8 text-gray-400" />}
+                        {method.type === "bank" && (
+                          <Building2 className="h-8 w-8 text-gray-400" />
+                        )}
+                        {method.type === "paypal" && (
+                          <Wallet className="h-8 w-8 text-gray-400" />
+                        )}
                         <div>
-                          <h3 className="text-lg font-medium text-gray-900">{method.name}</h3>
-                          {method.type === 'bank' && (
+                          <h3 className="text-lg font-medium text-gray-900">
+                            {method.name}
+                          </h3>
+                          {method.type === "bank" && (
                             <p className="text-sm text-gray-500">
                               IBAN: •••• {method.details.iban?.slice(-4)}
                             </p>
                           )}
-                          {method.type === 'paypal' && (
-                            <p className="text-sm text-gray-500">{method.details.paypalEmail}</p>
+                          {method.type === "paypal" && (
+                            <p className="text-sm text-gray-500">
+                              {method.details.paypalEmail}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -526,7 +570,9 @@ export default function Withdraw() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleSetDefaultWithdrawMethod(method.id)}
+                            onClick={() =>
+                              handleSetDefaultWithdrawMethod(method.id)
+                            }
                           >
                             Définir par défaut
                           </Button>
@@ -571,11 +617,15 @@ export default function Withdraw() {
                           <h3 className="text-lg font-medium text-gray-900">
                             {profile.companyName}
                           </h3>
-                          <p className="text-sm text-gray-500">{profile.fullName}</p>
+                          <p className="text-sm text-gray-500">
+                            {profile.fullName}
+                          </p>
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
                           <p>{profile.address}</p>
-                          <p>{profile.zipCode} {profile.city}</p>
+                          <p>
+                            {profile.zipCode} {profile.city}
+                          </p>
                           <p>{profile.region}</p>
                           <p>{profile.country}</p>
                           {profile.taxId && (
@@ -589,7 +639,9 @@ export default function Withdraw() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleSetDefaultBillingProfile(profile.id)}
+                              onClick={() =>
+                                handleSetDefaultBillingProfile(profile.id)
+                              }
                             >
                               Définir par défaut
                             </Button>
@@ -597,7 +649,9 @@ export default function Withdraw() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteBillingProfile(profile.id)}
+                            onClick={() =>
+                              handleDeleteBillingProfile(profile.id)
+                            }
                           >
                             Supprimer
                           </Button>
@@ -631,11 +685,13 @@ export default function Withdraw() {
                   Type de méthode
                 </label>
                 <select
-                  value={newWithdrawMethod.type || ''}
-                  onChange={(e) => setNewWithdrawMethod({
-                    ...newWithdrawMethod,
-                    type: e.target.value as 'bank' | 'paypal'
-                  })}
+                  value={newWithdrawMethod.type || ""}
+                  onChange={(e) =>
+                    setNewWithdrawMethod({
+                      ...newWithdrawMethod,
+                      type: e.target.value as "bank" | "paypal",
+                    })
+                  }
                   className="w-full rounded-md border border-gray-200 p-2"
                   required
                 >
@@ -645,66 +701,76 @@ export default function Withdraw() {
                 </select>
               </div>
 
-              {newWithdrawMethod.type === 'bank' && (
+              {newWithdrawMethod.type === "bank" && (
                 <>
                   <Input
                     label="Titulaire du compte"
-                    value={newWithdrawMethod.name || ''}
-                    onChange={(e) => setNewWithdrawMethod({
-                      ...newWithdrawMethod,
-                      name: e.target.value
-                    })}
+                    value={newWithdrawMethod.name || ""}
+                    onChange={(e) =>
+                      setNewWithdrawMethod({
+                        ...newWithdrawMethod,
+                        name: e.target.value,
+                      })
+                    }
                     required
                   />
                   <Input
                     label="IBAN"
-                    value={newWithdrawMethod.details?.iban || ''}
-                    onChange={(e) => setNewWithdrawMethod({
-                      ...newWithdrawMethod,
-                      details: {
-                        ...newWithdrawMethod.details,
-                        iban: e.target.value
-                      }
-                    })}
+                    value={newWithdrawMethod.details?.iban || ""}
+                    onChange={(e) =>
+                      setNewWithdrawMethod({
+                        ...newWithdrawMethod,
+                        details: {
+                          ...newWithdrawMethod.details,
+                          iban: e.target.value,
+                        },
+                      })
+                    }
                     required
                   />
                   <Input
                     label="BIC"
-                    value={newWithdrawMethod.details?.bic || ''}
-                    onChange={(e) => setNewWithdrawMethod({
-                      ...newWithdrawMethod,
-                      details: {
-                        ...newWithdrawMethod.details,
-                        bic: e.target.value
-                      }
-                    })}
+                    value={newWithdrawMethod.details?.bic || ""}
+                    onChange={(e) =>
+                      setNewWithdrawMethod({
+                        ...newWithdrawMethod,
+                        details: {
+                          ...newWithdrawMethod.details,
+                          bic: e.target.value,
+                        },
+                      })
+                    }
                     required
                   />
                 </>
               )}
 
-              {newWithdrawMethod.type === 'paypal' && (
+              {newWithdrawMethod.type === "paypal" && (
                 <>
                   <Input
                     label="Nom du compte"
-                    value={newWithdrawMethod.name || ''}
-                    onChange={(e) => setNewWithdrawMethod({
-                      ...newWithdrawMethod,
-                      name: e.target.value
-                    })}
+                    value={newWithdrawMethod.name || ""}
+                    onChange={(e) =>
+                      setNewWithdrawMethod({
+                        ...newWithdrawMethod,
+                        name: e.target.value,
+                      })
+                    }
                     required
                   />
                   <Input
                     label="Email PayPal"
                     type="email"
-                    value={newWithdrawMethod.details?.paypalEmail || ''}
-                    onChange={(e) => setNewWithdrawMethod({
-                      ...newWithdrawMethod,
-                      details: {
-                        ...newWithdrawMethod.details,
-                        paypalEmail: e.target.value
-                      }
-                    })}
+                    value={newWithdrawMethod.details?.paypalEmail || ""}
+                    onChange={(e) =>
+                      setNewWithdrawMethod({
+                        ...newWithdrawMethod,
+                        details: {
+                          ...newWithdrawMethod.details,
+                          paypalEmail: e.target.value,
+                        },
+                      })
+                    }
                     required
                   />
                 </>
@@ -717,9 +783,7 @@ export default function Withdraw() {
                 >
                   Annuler
                 </Button>
-                <Button onClick={handleAddWithdrawMethod}>
-                  Ajouter
-                </Button>
+                <Button onClick={handleAddWithdrawMethod}>Ajouter</Button>
               </div>
             </div>
           </div>
@@ -743,17 +807,23 @@ export default function Withdraw() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="Nom de l'entreprise"
-                  value={newBillingProfile.companyName || ''}
+                  value={newBillingProfile.companyName || ""}
                   onChange={(e) =>
-                    setNewBillingProfile({ ...newBillingProfile, companyName: e.target.value })
+                    setNewBillingProfile({
+                      ...newBillingProfile,
+                      companyName: e.target.value,
+                    })
                   }
                   required
                 />
                 <Input
                   label="Nom complet"
-                  value={newBillingProfile.fullName || ''}
+                  value={newBillingProfile.fullName || ""}
                   onChange={(e) =>
-                    setNewBillingProfile({ ...newBillingProfile, fullName: e.target.value })
+                    setNewBillingProfile({
+                      ...newBillingProfile,
+                      fullName: e.target.value,
+                    })
                   }
                   required
                 />
@@ -763,9 +833,12 @@ export default function Withdraw() {
 
               <Input
                 label="Numéro de TVA (optionnel)"
-                value={newBillingProfile.taxId || ''}
+                value={newBillingProfile.taxId || ""}
                 onChange={(e) =>
-                  setNewBillingProfile({ ...newBillingProfile, taxId: e.target.value })
+                  setNewBillingProfile({
+                    ...newBillingProfile,
+                    taxId: e.target.value,
+                  })
                 }
               />
 
@@ -776,9 +849,7 @@ export default function Withdraw() {
                 >
                   Annuler
                 </Button>
-                <Button onClick={handleAddBillingProfile}>
-                  Ajouter
-                </Button>
+                <Button onClick={handleAddBillingProfile}>Ajouter</Button>
               </div>
             </div>
           </div>

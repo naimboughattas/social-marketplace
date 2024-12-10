@@ -4,6 +4,7 @@ import * as Accounts from "../controllers/ressources/accounts";
 import * as Campaigns from "../controllers/ressources/campaigns";
 import * as Tickets from "../controllers/ressources/tickets";
 import * as Disputes from "../controllers/ressources/disputes";
+import * as Withdraws from "../controllers/ressources/withdraws";
 import * as Withdrawals from "../controllers/ressources/withdrawals";
 import * as Reviews from "../controllers/ressources/reviews";
 import * as Proposals from "../controllers/ressources/proposals";
@@ -87,6 +88,7 @@ createRoutes("reviews", Reviews);
 createRoutes("tickets", Tickets);
 createRoutes("disputes", Disputes);
 createRoutes("users", Users);
+createRoutes("withdraws", Withdraws);
 createRoutes("withdrawals", Withdrawals);
 
 export default router;

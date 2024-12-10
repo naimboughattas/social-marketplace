@@ -67,7 +67,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-              {state?.items?.length === 0 ? (
+              {state.items.length === 0 ? (
                 <div className="text-center">
                   <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
                   <h3 className="mt-2 text-sm font-medium text-gray-900">
@@ -79,7 +79,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 </div>
               ) : (
                 <ul role="list" className="divide-y divide-gray-200">
-                  {state?.items?.map((item) => {
+                  {state.items.map((item) => {
                     const postUrls = item.postUrl?.split('|').filter(url => url.trim() !== '') || [];
                     const totalPrice = item.price * (postUrls.length || 1);
 
@@ -161,7 +161,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               )}
             </div>
 
-            {state?.items?.length > 0 && (
+            {state.items.length > 0 && (
               <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
                 <div className="flex justify-between text-base font-medium text-gray-900">
                   <p>Total</p>

@@ -102,7 +102,6 @@ export default function AccountBanner({
     loading: isFetching,
     handleUpdateAccount,
   } = useAccount(accountId);
-  console.log(account);
   const accountData =
     !isFetching && formatAccountDataByPlatform(account.platform, account);
   const { addNotification } = useNotifications();

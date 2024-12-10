@@ -53,6 +53,8 @@ export default function ServiceModal({
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
   const [postUrl, setPostUrl] = useState("");
 
+  console.log("ServiceModal", targetHandle);
+
   const resetForm = () => {
     setStep("type");
     setInteractionType(service === "follow" ? "one-month" : "specific");
@@ -350,6 +352,7 @@ export default function ServiceModal({
                 showPostSelection={showPostSelection}
                 selectedPosts={selectedPosts}
                 postUrl={postUrl}
+                targetHandle={targetHandle}
                 onShowPostSelectionChange={setShowPostSelection}
                 onSelectedPostsChange={setSelectedPosts}
                 onPostUrlChange={setPostUrl}
