@@ -22,9 +22,7 @@ export function useProposals() {
     const fetchProposals = async () => {
       try {
         setLoading(true);
-        const fetchedProposals = await getProposals({
-          filters: [["userId", "==", user.id]],
-        });
+        const fetchedProposals = await getProposals([], user.id);
         setProposals(fetchedProposals);
         setError(null);
       } catch (err) {

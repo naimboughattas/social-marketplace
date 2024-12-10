@@ -17,29 +17,29 @@ export function useTickets() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchTickets = async (userId: string) => {
+    try {
+      setLoading(true);
+      const fetchedTickets = await getTickets({
+        filters: [["userId", "==", userId]],
+      });
+      setTickets(fetchedTickets);
+      setError(null);
+    } catch (err) {
+      setError("Error fetching tickets");
+      addNotification({
+        type: "error",
+        message: "Failed to load tickets",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
 
-    const fetchTickets = async () => {
-      try {
-        setLoading(true);
-        const fetchedTickets = await getTickets({
-          filters: [["userId", "==", user.id]],
-        });
-        setTickets(fetchedTickets);
-        setError(null);
-      } catch (err) {
-        setError("Error fetching tickets");
-        addNotification({
-          type: "error",
-          message: "Failed to load tickets",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTickets();
+    fetchTickets(user.id);
   }, [user]);
 
   const handleCreateTicket = async (
@@ -68,12 +68,12 @@ export function useTickets() {
   };
 
   const handleUpdateTicket = async (
-    userId: string,
+    ticketId: string,
     updates: Partial<Ticket>
   ) => {
     try {
-      await updateTicket(userId, updates);
-      setTickets((acc) => ({ ...acc, ...updates }));
+      await updateTicket(ticketId, updates);
+      await fetchTickets(user.id);
       addNotification({
         type: "success",
         message: "Account updated successfully",

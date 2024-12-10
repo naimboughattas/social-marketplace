@@ -112,7 +112,7 @@ export default function Proposals() {
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
     null
   );
-  const { proposals, handleUpdateProposal } = useProposals();
+  const { proposals } = useProposals();
 
   const handleAccept = (id: string) => {
     setProposals(

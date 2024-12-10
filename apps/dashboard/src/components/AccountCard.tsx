@@ -76,9 +76,9 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
       };
     case "linkedin":
       return {
-        username: data.username,
+        username: data.name,
         profile_picture_url: data.picture,
-        followers: data.followers,
+        followers: 0,
         category: data.category,
         country: data.country,
         city: data.city,
@@ -131,7 +131,7 @@ export default function AccountCard({
   const handleShare = async () => {
     const url = `${window.location.origin}/${
       account.platform
-    }/${account.username.replace("@", "")}`;
+    }/${accountData.username.replace("@", "")}`;
     try {
       await navigator.clipboard.writeText(url);
       addNotification({
@@ -161,17 +161,17 @@ export default function AccountCard({
           <div className="flex items-center space-x-3">
             <img
               src={accountData.profile_picture_url}
-              alt={account.username}
+              alt={accountData.username}
               className="h-12 w-12 rounded-full object-cover ring-2 ring-white"
             />
             <div>
               <div className="flex items-center space-x-2">
                 <PlatformIcon platform={account.platform} className="h-4 w-4" />
                 <Link
-                  to={`/${account.platform}/${account.username}`}
+                  to={`/${account.platform}/${accountData.username}`}
                   className="font-medium text-purple-600 hover:text-purple-700"
                 >
-                  {account.username}
+                  {accountData.username}
                 </Link>
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">

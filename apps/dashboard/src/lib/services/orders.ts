@@ -70,7 +70,10 @@ export async function createOrder(
 }
 
 // Récupérer toutes les commandes d'un utilisateur
-export async function getOrders(filters: any): Promise<Order[]> {
+export async function getOrders(
+  filters?: any,
+  userId?: string
+): Promise<Order[]> {
   const response = await fetch(
     `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/orders`,
     {
@@ -78,7 +81,10 @@ export async function getOrders(filters: any): Promise<Order[]> {
       headers: new Headers({
         "Content-Type": "application/json",
       }),
-      body: JSON.stringify(filters),
+      body: JSON.stringify({
+        userId,
+        filters,
+      }),
     }
   );
 
@@ -86,8 +92,8 @@ export async function getOrders(filters: any): Promise<Order[]> {
     throw new Error("Failed to fetch orders");
   }
 
-  const result = await response.json();
-  return result.orders.map((doc: any) => ({
+  const orders = await response.json();
+  return orders.map((doc: any) => ({
     id: doc.id,
     ...doc,
     createdAt: new Date(doc.createdAt),

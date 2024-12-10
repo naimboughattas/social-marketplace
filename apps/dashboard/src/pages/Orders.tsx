@@ -106,8 +106,8 @@ export default function Orders() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [filters, setFilters] = useState<OrderFilters>(defaultFilters);
 
-  const { orders, handleDispute, handleAcceptDelivery, handleArchive } =
-    useOrders();
+  const { orders, handleDispute, handleAcceptDelivery } = useOrders();
+  console.log(orders);
 
   // const handleDispute = (orderId: string, reason: string) => {
   //   setOrders(

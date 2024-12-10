@@ -8,10 +8,71 @@ import {
   ExternalLink,
 } from "lucide-react";
 import Button from "../../components/Button";
-import { SocialAccount, Service } from "../../lib/types";
+import { SocialAccount, Service, Platform } from "../../lib/types";
 import SortableHeader from "./SortableHeader";
 import { useFavorites } from "../../lib/favorites";
 import InfluencerProfileModal from "./InfluencerProfileModal";
+
+const formatAccountDataByPlatform = (platform: Platform, data: any) => {
+  switch (platform) {
+    case "instagram":
+      return {
+        username: data.username,
+        profile_picture_url: data.profile_picture_url,
+        followers: data.followers_count,
+        category: data.category,
+        country: data.country,
+        city: data.city,
+      };
+    case "tiktok":
+      return {
+        username: data.username,
+        profile_picture_url: data.avatar_url,
+        followers: data.follower_count,
+        category: data.category,
+        country: data.country,
+        city: data.city,
+      };
+    case "youtube":
+      return {
+        username: data.title,
+        profile_picture_url: data.thumbnails.default.url,
+        followers: data.subscriberCount,
+        category: data.category,
+        country: data.country,
+        city: data.city,
+      };
+    case "x":
+      return {
+        username: data.username,
+        profile_picture_url: data.profile_image_url,
+        followers: data.public_metrics.followers_count,
+        category: data.category,
+        country: data.country,
+        city: data.city,
+      };
+    case "facebook":
+      return {
+        username: data.name,
+        profile_picture_url: data.picture,
+        followers: data.friends,
+        category: data.category,
+        country: data.country,
+        city: data.city,
+      };
+    case "linkedin":
+      return {
+        username: data.name,
+        profile_picture_url: data.picture,
+        followers: 0,
+        category: data.category,
+        country: data.country,
+        city: data.city,
+      };
+    default:
+      return {};
+  }
+};
 
 interface InfluencerTableProps {
   influencers: SocialAccount[];
@@ -154,8 +215,12 @@ export default function InfluencerTable({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <img
-                      src={influencer.profile_picture_url}
-                      alt={influencer.displayName}
+                      src={
+                        formatAccountDataByPlatform(
+                          influencer.platform,
+                          influencer
+                        ).profile_picture_url
+                      }
                       className="h-10 w-10 rounded-full cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -170,7 +235,12 @@ export default function InfluencerTable({
                           setSelectedInfluencer(influencer);
                         }}
                       >
-                        {influencer.username}
+                        {
+                          formatAccountDataByPlatform(
+                            influencer.platform,
+                            influencer
+                          ).username
+                        }
                       </div>
                       <div className="text-sm text-gray-500">
                         {influencer.category}
@@ -179,7 +249,10 @@ export default function InfluencerTable({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {influencer.followers_count.toLocaleString()}
+                  {formatAccountDataByPlatform(
+                    influencer.platform,
+                    influencer
+                  ).followers.toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {influencer.city}, {influencer.country}

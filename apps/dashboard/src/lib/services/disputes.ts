@@ -1,10 +1,12 @@
+import { Dispute } from "../types/disputes";
+
 // Créer un nouveau compte
-export async function createProposal(
-  data: Omit<any, "id" | "createdAt">,
+export async function createDispute(
+  data: Omit<Dispute, "id" | "createdAt">,
   userId: string
 ): Promise<string> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/proposals/create`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/disputes/create`,
     {
       method: "POST",
       headers: new Headers({
@@ -15,7 +17,7 @@ export async function createProposal(
   );
 
   if (!response.ok) {
-    throw new Error("Failed to create proposal");
+    throw new Error("Failed to create dispute");
   }
 
   const result = await response.json();
@@ -23,36 +25,30 @@ export async function createProposal(
 }
 
 // Récupérer tous les comptes d'un utilisateur avec des filtres
-export async function getProposals(
-  filters?: any,
-  userId?: string
-): Promise<any[]> {
+export async function getDisputes(filters: any): Promise<Dispute[]> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/proposals`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/disputes`,
     {
       method: "POST",
       headers: new Headers({
         "Content-Type": "application/json",
         "ngrok-skip-browser-warning": "69420",
       }),
-      body: JSON.stringify({
-        userId,
-        filters,
-      }),
+      body: JSON.stringify(filters),
     }
   );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch proposals");
+    throw new Error("Failed to fetch disputes");
   }
 
   return await response.json();
 }
 
 // Récupérer un compte spécifique par ID
-export async function getProposal(proposalId: string): Promise<any> {
+export async function getDispute(disputeId: string): Promise<Dispute> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/proposals/${proposalId}`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/disputes/${disputeId}`,
     {
       headers: new Headers({
         "ngrok-skip-browser-warning": "69420",
@@ -61,19 +57,19 @@ export async function getProposal(proposalId: string): Promise<any> {
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch proposal with ID ${proposalId}`);
+    throw new Error(`Failed to fetch dispute with ID ${disputeId}`);
   }
 
   return await response.json();
 }
 
 // Mettre à jour un compte
-export async function updateProposal(
-  proposalId: string,
-  updates: Partial<any>
+export async function updateDispute(
+  disputeId: string,
+  updates: Partial<Dispute>
 ): Promise<void> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/proposals/${proposalId}`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/disputes/${disputeId}`,
     {
       method: "PUT",
       headers: new Headers({
@@ -85,14 +81,14 @@ export async function updateProposal(
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to update proposal with ID ${proposalId}`);
+    throw new Error(`Failed to update dispute with ID ${disputeId}`);
   }
 }
 
 // Supprimer un compte (soft delete)
-export async function deleteProposal(proposalId: string): Promise<void> {
+export async function deleteDispute(disputeId: string): Promise<void> {
   const response = await fetch(
-    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/proposals/${proposalId}`,
+    `${import.meta.env.VITE_NEXT_PUBLIC_API_URL}/disputes/${disputeId}`,
     {
       method: "DELETE",
       headers: new Headers({
@@ -102,6 +98,6 @@ export async function deleteProposal(proposalId: string): Promise<void> {
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to delete proposal with ID ${proposalId}`);
+    throw new Error(`Failed to delete dispute with ID ${disputeId}`);
   }
 }

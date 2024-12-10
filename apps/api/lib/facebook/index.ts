@@ -46,6 +46,7 @@ export const getFacebookUserData = async (
   const url = `https://graph.facebook.com/me?fields=id,name,picture.width(200).height(200),friends&access_token=${accessToken}`;
   const response = await fetch(url);
   const userData: unknown = await response.json();
+  console.log("Facebook User Profile:", userData);
 
   // Vérification de la structure des données avec un type guard
   if (isFacebookUserResponse(userData)) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Tab } from "@headlessui/react";
 import {
   Search,
@@ -14,6 +14,8 @@ import { formatDate } from "../lib/utils";
 import { useNotifications } from "../lib/notifications";
 import { cn } from "../lib/utils";
 import { useTickets } from "../lib/hooks/useTickets";
+import { useDisputes } from "../lib/hooks/useDisputes";
+import { Timestamp } from "firebase/firestore";
 
 // Types et données mockées importées des anciennes pages...
 // FAQ Data
@@ -78,37 +80,10 @@ interface Ticket {
   }[];
 }
 
-const mockTickets: Ticket[] = [
-  {
-    id: "1",
-    subject: "Question sur le système de paiement",
-    status: "open",
-    priority: "medium",
-    createdAt: new Date(Date.now() - 86400000),
-    lastUpdate: new Date(Date.now() - 3600000),
-    messages: [
-      {
-        id: "1",
-        sender: "user",
-        content:
-          "Bonjour, j'aimerais savoir comment fonctionne le système de paiement automatique ?",
-        timestamp: new Date(Date.now() - 86400000),
-      },
-      {
-        id: "2",
-        sender: "support",
-        content:
-          "Bonjour ! Le système de paiement automatique permet de recharger automatiquement votre compte lorsque votre solde passe sous un certain seuil. Vous pouvez configurer ce seuil et le montant de rechargement dans vos paramètres.",
-        timestamp: new Date(Date.now() - 3600000),
-      },
-    ],
-  },
-];
-
 // Disputes Data
 interface Dispute {
   id: string;
-  orderNumber: number;
+  orderId: string;
   date: Date;
   service: "follow" | "like" | "comment" | "repost_story";
   influencer: {
@@ -124,31 +99,6 @@ interface Dispute {
     timestamp: Date;
   }[];
 }
-
-const mockDisputes: Dispute[] = [
-  {
-    id: "1",
-    orderNumber: 123,
-    date: new Date(),
-    service: "follow",
-    influencer: {
-      username: "@fashion_style",
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
-    },
-    reason: "Le follow n'a pas été maintenu pendant la durée prévue",
-    status: "pending",
-    messages: [
-      {
-        id: "1",
-        sender: "user",
-        content:
-          "L'influenceur s'est désabonné après seulement 2 jours au lieu des 30 jours prévus.",
-        timestamp: new Date(Date.now() - 3600000),
-      },
-    ],
-  },
-];
 
 const priorityStyles = {
   low: "bg-green-100 text-green-800",
@@ -190,15 +140,26 @@ export default function Support() {
 
   // Messages State
   const { tickets, handleCreateTicket, handleUpdateTicket } = useTickets();
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const selectedTicket = useMemo(
+    () => tickets.find((ticket) => ticket.id === selectedTicketId) || null,
+    [tickets, selectedTicketId]
+  );
   const [ticketSearch, setTicketSearch] = useState("");
   const [message, setMessage] = useState("");
   const [showNewTicket, setShowNewTicket] = useState(false);
   const [newTicketSubject, setNewTicketSubject] = useState("");
 
   // Disputes State
-  const [disputes] = useState<Dispute[]>(mockDisputes);
-  const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
+  const { disputes, handleUpdateDispute } = useDisputes();
+  const [selectedDisputeId, setSelectedDisputeId] = useState<string | null>(
+    null
+  );
+  const selectedDispute = useMemo(
+    () => disputes.find((dispute) => dispute.id === selectedDisputeId) || null,
+    [disputes, selectedDisputeId]
+  );
+  console.log("selectedDisputeId", selectedDisputeId);
   const [disputeSearch, setDisputeSearch] = useState("");
 
   // FAQ Functions
@@ -219,7 +180,7 @@ export default function Support() {
     ticket.subject.toLowerCase().includes(ticketSearch.toLowerCase())
   );
 
-  const handleSendMessage = () => {
+  const handleSendTicketMessage = async () => {
     if (!message.trim() || !selectedTicket) return;
 
     const newMessage = {
@@ -228,6 +189,11 @@ export default function Support() {
       content: message,
       timestamp: new Date(),
     };
+    await handleUpdateTicket(selectedTicket.id, {
+      ...selectedTicket,
+      messages: [...selectedTicket.messages, newMessage],
+      lastUpdate: new Date(),
+    });
 
     const updatedTickets = tickets.map((ticket) => {
       if (ticket.id === selectedTicket.id) {
@@ -239,8 +205,28 @@ export default function Support() {
       }
       return ticket;
     });
+    setMessage("");
+    addNotification({
+      type: "success",
+      message: "Message envoyé",
+    });
+  };
 
-    handleUpdateTicket(user.id, updatedTickets);
+  const handleSendDisputeMessage = async () => {
+    if (!message.trim() || !selectedDispute) return;
+
+    const newMessage = {
+      id: crypto.randomUUID(),
+      sender: "user" as const,
+      content: message,
+      timestamp: new Date(),
+    };
+    await handleUpdateDispute(selectedDispute.id, {
+      ...selectedDispute,
+      messages: [...selectedDispute.messages, newMessage],
+      lastUpdate: new Date(),
+    });
+
     setMessage("");
     addNotification({
       type: "success",
@@ -251,7 +237,7 @@ export default function Support() {
   // Disputes Functions
   const filteredDisputes = disputes.filter(
     (dispute) =>
-      dispute.orderNumber.toString().includes(disputeSearch) ||
+      dispute.orderId.includes(disputeSearch) ||
       dispute.influencer.username
         .toLowerCase()
         .includes(disputeSearch.toLowerCase())
@@ -388,7 +374,7 @@ export default function Support() {
                     {filteredTickets.map((ticket) => (
                       <button
                         key={ticket.id}
-                        onClick={() => setSelectedTicket(ticket)}
+                        onClick={() => setSelectedTicketId(ticket.id)}
                         className={`w-full p-4 text-left hover:bg-gray-50 ${
                           selectedTicket?.id === ticket.id ? "bg-purple-50" : ""
                         }`}
@@ -500,7 +486,9 @@ export default function Support() {
                             placeholder="Votre message..."
                             className="flex-1"
                           />
-                          <Button onClick={handleSendMessage}>Envoyer</Button>
+                          <Button onClick={() => handleSendTicketMessage()}>
+                            Envoyer
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -539,11 +527,9 @@ export default function Support() {
                     {filteredDisputes.map((dispute) => (
                       <button
                         key={dispute.id}
-                        onClick={() => setSelectedDispute(dispute)}
+                        onClick={() => setSelectedDisputeId(dispute.id)}
                         className={`w-full p-4 text-left hover:bg-gray-50 ${
-                          selectedDispute?.id === dispute.id
-                            ? "bg-purple-50"
-                            : ""
+                          selectedDisputeId === dispute.id ? "bg-purple-50" : ""
                         }`}
                       >
                         <div className="flex justify-between items-start">
@@ -555,7 +541,7 @@ export default function Support() {
                             />
                             <div>
                               <p className="font-medium text-gray-900">
-                                Commande #{dispute.orderNumber}
+                                Commande #{dispute.orderId}
                               </p>
                               <p className="text-sm text-gray-500">
                                 {dispute.influencer.username}
@@ -589,7 +575,7 @@ export default function Support() {
                       <div className="flex justify-between items-start">
                         <div>
                           <h2 className="text-lg font-medium text-gray-900">
-                            Litige #{selectedDispute.orderNumber}
+                            Litige #{selectedDispute.orderId}
                           </h2>
                           <p className="text-sm text-gray-500">
                             {selectedDispute.influencer.username} •{" "}
@@ -635,7 +621,12 @@ export default function Support() {
                                   : "text-gray-500"
                               }`}
                             >
-                              {formatDate(msg.timestamp)}
+                              {new Timestamp(
+                                msg.timestamp.seconds,
+                                msg.timestamp.nanoseconds
+                              )
+                                .toDate()
+                                .toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -652,7 +643,9 @@ export default function Support() {
                             placeholder="Votre message..."
                             className="flex-1"
                           />
-                          <Button onClick={handleSendMessage}>Envoyer</Button>
+                          <Button onClick={() => handleSendDisputeMessage()}>
+                            Envoyer
+                          </Button>
                         </div>
                       </div>
                     )}

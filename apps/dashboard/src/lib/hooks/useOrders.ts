@@ -9,30 +9,6 @@ import {
 } from "../../lib/services/orders";
 import { useAuth } from "../auth";
 
-// Mock data
-const mockOrders: Order[] = [
-  {
-    id: "1",
-    orderNumber: 5,
-    date: new Date(),
-    platform: "instagram",
-    influencer: {
-      id: "1",
-      username: "@fashion_style",
-      profileImage:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
-    },
-    service: "follow",
-    target: "@target_account2",
-    price: 4.0,
-    status: "delivered",
-    acceptedAt: new Date(Date.now() - 3600000),
-    deliveredAt: new Date(),
-    confirmedAt: null,
-    proofUrl: "https://example.com/proof.jpg",
-  },
-];
-
 export function useOrders() {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
@@ -46,9 +22,7 @@ export function useOrders() {
     const fetchAccounts = async () => {
       try {
         setLoading(true);
-        const fetchedOrders = await getOrders({
-          filters: [["userId", "==", user.id]],
-        });
+        const fetchedOrders = await getOrders([], user.id);
         setOrders(fetchedOrders);
         setError(null);
       } catch (err) {

@@ -3,6 +3,7 @@ import * as Users from "../controllers/ressources/users";
 import * as Accounts from "../controllers/ressources/accounts";
 import * as Campaigns from "../controllers/ressources/campaigns";
 import * as Tickets from "../controllers/ressources/tickets";
+import * as Disputes from "../controllers/ressources/disputes";
 import * as Withdrawals from "../controllers/ressources/withdrawals";
 import * as Reviews from "../controllers/ressources/reviews";
 import * as Proposals from "../controllers/ressources/proposals";
@@ -84,6 +85,7 @@ createRoutes("subscriptions", Subscriptions);
 createRoutes("proposals", Proposals);
 createRoutes("reviews", Reviews);
 createRoutes("tickets", Tickets);
+createRoutes("disputes", Disputes);
 createRoutes("users", Users);
 createRoutes("withdrawals", Withdrawals);
 

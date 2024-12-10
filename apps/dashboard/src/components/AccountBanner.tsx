@@ -51,7 +51,7 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
       return {
         username: data.title,
         profile_picture_url: data.thumbnails.default.url,
-        followers: data.followers,
+        followers: data.subscriberCount,
         category: data.category,
         country: data.country,
         city: data.city,
@@ -76,9 +76,9 @@ const formatAccountDataByPlatform = (platform: Platform, data: any) => {
       };
     case "linkedin":
       return {
-        username: data.username,
+        username: data.name,
         profile_picture_url: data.picture,
-        followers: data.followers,
+        followers: 0,
         category: data.category,
         country: data.country,
         city: data.city,
@@ -206,7 +206,7 @@ export default function AccountBanner({
               onClick={() => onSelect()}
               className="text-gray-500 hover:text-red-600 border-gray-200"
             >
-              Supprimer
+              Sélectionner
             </Button>
           </div>
         </div>
