@@ -21,6 +21,7 @@ export const getAll = async (payload: any) => {
   const accounts = (
     await getDocuments<Account>("accounts", [["userId", "==", userId]])
   ).map((account) => account.id);
+  if (!accounts.length) return [];
   if (type === "customer")
     return await getDocuments("subscriptions", [["client.id", "in", accounts]]);
   if (type === "influencer")

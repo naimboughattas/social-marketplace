@@ -20,6 +20,7 @@ export const getAll = async (payload: any) => {
   const accounts = (
     await getDocuments<Account>("accounts", [["userId", "==", userId]])
   ).map((account) => account.id);
+  if (!accounts.length) return [];
   return await getDocuments("orders", [
     ...filters,
     userId && ["target", "in", accounts],

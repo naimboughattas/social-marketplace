@@ -37,5 +37,5 @@ initializeApp({
 // Obtention de la référence à la base de données
 export const db = getFirestore();
 if (process.env.NODE_ENV === "development") {
-  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectFirestoreEmulator(db, "127.0.0.1", 8081);
 }
