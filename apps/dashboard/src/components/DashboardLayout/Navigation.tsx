@@ -43,7 +43,7 @@ const defaultNavigation: NavSection[] = [
       { name: 'Campagnes', href: '/dashboard/campaigns', icon: Megaphone },
       { name: 'Abonnements', href: '/dashboard/subscriptions', icon: RefreshCw },
       { name: 'Factures', href: '/dashboard/invoices', icon: FileText },
-      { name: 'Récompenses', href: '/dashboard/buyer-rewards', icon: Trophy }
+      // { name: 'Récompenses', href: '/dashboard/buyer-rewards', icon: Trophy }
     ]
   },
   {
@@ -53,8 +53,8 @@ const defaultNavigation: NavSection[] = [
       { name: 'Mes abonnés', href: '/dashboard/subscribers', icon: UserCheck },
       { name: 'Retirer ses gains', href: '/dashboard/withdraw', icon: DollarSign },
       { name: 'Mes comptes', href: '/dashboard/my-accounts', icon: Users },
-      { name: 'Affiliation', href: '/dashboard/affiliate', icon: Share2 },
-      { name: 'Récompenses', href: '/dashboard/seller-rewards', icon: Trophy }
+      // { name: 'Affiliation', href: '/dashboard/affiliate', icon: Share2 },
+      // { name: 'Récompenses', href: '/dashboard/seller-rewards', icon: Trophy }
     ]
   }
 ];

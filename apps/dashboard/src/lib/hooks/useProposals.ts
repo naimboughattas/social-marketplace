@@ -64,6 +64,29 @@ export function useProposals() {
     }
   };
 
+  const handleUpdateProposal = async (
+    accountId: string,
+    updates: Partial<any>
+  ) => {
+    try {
+      await updateProposal(accountId, updates);
+      const updatedProposals = proposals.map((proposal) =>
+        proposal.id === accountId ? { ...proposal, ...updates } : proposal
+      );
+      setProposals(updatedProposals);
+      addNotification({
+        type: "success",
+        message: "Account updated successfully",
+      });
+    } catch (err) {
+      addNotification({
+        type: "error",
+        message: "Failed to update account",
+      });
+      throw err;
+    }
+  };
+
   const handleDeleteProposal = async (proposalId: string) => {
     try {
       await deleteProposal(proposalId);
@@ -81,57 +104,13 @@ export function useProposals() {
     }
   };
 
-  const handleStartVerification = async (proposalId: string) => {
-    try {
-      const verificationCode = `VERIFY-${Date.now().toString(
-        36
-      )}-${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
-      setProposals(
-        proposals.map((acc) =>
-          acc.id === proposalId ? { ...acc, verificationSent: true } : acc
-        )
-      );
-      addNotification({
-        type: "success",
-        message: "Verification process started",
-      });
-    } catch (err) {
-      addNotification({
-        type: "error",
-        message: "Failed to start verification",
-      });
-      throw err;
-    }
-  };
-
-  const handleConfirmVerification = async (proposalId: string) => {
-    try {
-      setProposals(
-        proposals.map((acc) =>
-          acc.id === proposalId ? { ...acc, isVerified: true } : acc
-        )
-      );
-      addNotification({
-        type: "success",
-        message: "Proposal verified successfully",
-      });
-    } catch (err) {
-      addNotification({
-        type: "error",
-        message: "Failed to verify proposal",
-      });
-      throw err;
-    }
-  };
-
   return {
     proposals,
     loading,
     error,
     handleCreateProposal,
+    handleUpdateProposal,
     handleDeleteProposal,
-    handleStartVerification,
-    handleConfirmVerification,
   };
 }
 

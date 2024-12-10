@@ -112,20 +112,21 @@ export default function Proposals() {
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
     null
   );
-  const { proposals } = useProposals();
+  const { proposals, handleUpdateProposal } = useProposals();
 
-  const handleAccept = (id: string) => {
-    setProposals(
-      proposals.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              status: "accepted" as ProposalStatus,
-              acceptedAt: new Date(),
-            }
-          : p
-      )
-    );
+  const handleAccept = async (id: string) => {
+    await handleUpdateProposal(id, { status: "accepted" });
+    // setProposals(
+    //   proposals.map((p) =>
+    //     p.id === id
+    //       ? {
+    //           ...p,
+    //           status: "accepted" as ProposalStatus,
+    //           acceptedAt: new Date(),
+    //         }
+    //       : p
+    //   )
+    // );
 
     addNotification({
       type: "success",
@@ -133,18 +134,19 @@ export default function Proposals() {
     });
   };
 
-  const handleRefuse = (id: string, reason: string) => {
-    setProposals(
-      proposals.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              status: "refused" as ProposalStatus,
-              refusalReason: reason,
-            }
-          : p
-      )
-    );
+  const handleRefuse = async (id: string, reason: string) => {
+    await handleUpdateProposal(id, { status: "refused" });
+    // setProposals(
+    //   proposals.map((p) =>
+    //     p.id === id
+    //       ? {
+    //           ...p,
+    //           status: "refused" as ProposalStatus,
+    //           refusalReason: reason,
+    //         }
+    //       : p
+    //   )
+    // );
 
     addNotification({
       type: "success",
@@ -152,19 +154,20 @@ export default function Proposals() {
     });
   };
 
-  const handleDeliver = (id: string, file: File) => {
-    setProposals(
-      proposals.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              status: "delivered" as ProposalStatus,
-              deliveredAt: new Date(),
-              proofUrl: URL.createObjectURL(file),
-            }
-          : p
-      )
-    );
+  const handleDeliver = async (id: string, file: File) => {
+    await handleUpdateProposal(id, { status: "delivered" });
+    // setProposals(
+    //   proposals.map((p) =>
+    //     p.id === id
+    //       ? {
+    //           ...p,
+    //           status: "delivered" as ProposalStatus,
+    //           deliveredAt: new Date(),
+    //           proofUrl: URL.createObjectURL(file),
+    //         }
+    //       : p
+    //   )
+    // );
 
     addNotification({
       type: "success",
